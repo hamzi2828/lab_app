@@ -1,7 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+   "jsx": "react-native",
+    "target": "ESNext",
+    "moduleResolution": "node",
     "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": [
         "./*"
@@ -14,4 +19,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]
+  
 }
