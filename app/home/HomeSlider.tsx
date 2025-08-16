@@ -1,14 +1,8 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import Swiper from "react-native-swiper";
-import { useRouter } from "expo-router";
-
 const HomeSlider = () => {
-  const router = useRouter();
-
-  const handleSlideClick = (targetRoute) => {
-    router.push(targetRoute); // Navigate to the desired route
-  };
+  // No routing needed for banners
 
   return (
     <View style={styles.sliderContainer}>
@@ -21,28 +15,22 @@ const HomeSlider = () => {
         paginationStyle={styles.paginationStyle} // Custom position for dots
       >
         {/* Slide 1 */}
-        <TouchableOpacity
-          style={styles.slide}
-          onPress={() => handleSlideClick("/home/Product1")}
-        >
+        <View style={styles.slide}>
           <Image
             source={require("../../assets/images/homesliderimg1.jpeg")}
             style={styles.image}
             resizeMode="cover"
           />
-        </TouchableOpacity>
+        </View>
 
         {/* Slide 2 */}
-        <TouchableOpacity
-          style={styles.slide}
-          onPress={() => handleSlideClick("/home/NewArrivals")}
-        >
+        <View style={styles.slide}>
           <Image
             source={require("../../assets/images/homesliderimg2.jpeg")}
             style={styles.image}
             resizeMode="cover"
           />
-        </TouchableOpacity>
+        </View>
       </Swiper>
     </View>
   );
@@ -52,18 +40,19 @@ const styles = StyleSheet.create({
   sliderContainer: {
     width: "100%",
     height: 200,
-    marginTop: 20,
+    marginTop: 0,
     padding: 16,
   },
   slide: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#fff",
   },
   image: {
     width: "100%",
     height: "100%",
-    borderRadius: 10,
+    borderRadius: 8,
   },
   dotStyle: {
     backgroundColor: "#ccc",

@@ -43,18 +43,6 @@ const HomePage = () => {
     },
     { key: "dealOfTheDay", component: <DealOfTheDay /> },
     {
-      key: "christmasDeal",
-      component: (
-        <View>
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Christmas Deal</Text>
-          </View>
-          <ProductCard />
-        </View>
-      ),
-    },
-    { key: "trendingProducts", component: <TrendingProducts /> },
-    {
       key: "productCards",
       component: (
         <View>
