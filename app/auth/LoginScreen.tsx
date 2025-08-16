@@ -290,28 +290,44 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E1E0E0",
-    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 25, // Increased for more rounded corners
     marginBottom: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     height: 50,
+    borderWidth: 1,
+    borderColor: "#E1E0E0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
+    color: '#16A34A', // Matches the primary button color
   },
   input: {
     flex: 1,
     fontSize: 16,
+    color: '#333',
+    paddingVertical: 0,
+    height: '100%',
   },
   eyeIcon: {
     marginLeft: 8,
   },
   continueButton: {
     backgroundColor: "#16A34A",
-    borderRadius: 10,
+    borderRadius: 25, // Matches the input field's capsule style
     height: 50,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
     marginVertical: 16,
   },
   continueButtonText: {

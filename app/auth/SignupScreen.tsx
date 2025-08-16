@@ -26,6 +26,7 @@ const SignupScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneOperator, setPhoneOperator] = useState("");
   const [showOperatorDropdown, setShowOperatorDropdown] = useState(false);
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [gender, setGender] = useState("");
@@ -69,7 +70,7 @@ const SignupScreen = () => {
         
         {/* Title Selection */}
         <View style={styles.inputContainer}>
-          <Ionicons name="person-circle-outline" size={20} color="#666" style={styles.inputIcon} />
+          <Ionicons name="person-outline" size={20} color="#16A34A" style={styles.inputIcon} />
           <TouchableWithoutFeedback onPress={() => setShowTitleDropdown(!showTitleDropdown)}>
             <View style={styles.titleInput}>
               <Text style={title ? styles.selectedText : styles.placeholderText}>
@@ -87,7 +88,7 @@ const SignupScreen = () => {
 
         {showTitleDropdown && (
           <View style={styles.dropdownContainer}>
-            {['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof'].map((item) => (
+            {['Mr', 'Mrs', 'Ms', 'Miss'].map((item) => (
               <TouchableOpacity 
                 key={item}
                 style={styles.dropdownItem}
@@ -126,28 +127,38 @@ const SignupScreen = () => {
 
         {/* Gender Selection */}
         <View style={styles.inputContainer}>
-          <Ionicons name="transgender-outline" size={20} color="#666" style={styles.inputIcon} />
-          <View style={styles.genderContainer}>
-            <TouchableOpacity 
-              style={[styles.genderOption, gender === 'male' && styles.genderSelected]}
-              onPress={() => setGender('male')}
-            >
-              <Text style={[styles.genderText, gender === 'male' && styles.genderTextSelected]}>Male</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.genderOption, gender === 'female' && styles.genderSelected]}
-              onPress={() => setGender('female')}
-            >
-              <Text style={[styles.genderText, gender === 'female' && styles.genderTextSelected]}>Female</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.genderOption, gender === 'other' && styles.genderSelected]}
-              onPress={() => setGender('other')}
-            >
-              <Text style={[styles.genderText, gender === 'other' && styles.genderTextSelected]}>Other</Text>
-            </TouchableOpacity>
-          </View>
+          <Ionicons name="transgender-outline" size={20} color="#16A34A" style={styles.inputIcon} />
+          <TouchableWithoutFeedback onPress={() => setShowGenderDropdown(!showGenderDropdown)}>
+            <View style={styles.genderInput}>
+              <Text style={gender ? styles.selectedText : styles.placeholderText}>
+                {gender || 'Select Gender'}
+              </Text>
+              <Ionicons 
+                name={showGenderDropdown ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color="#666"
+                style={styles.dropdownIcon} 
+              />
+            </View>
+          </TouchableWithoutFeedback>
         </View>
+
+        {showGenderDropdown && (
+          <View style={styles.dropdownContainer}>
+            {['Male', 'Female', 'Other'].map((item) => (
+              <TouchableOpacity 
+                key={item}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setGender(item);
+                  setShowGenderDropdown(false);
+                }}
+              >
+                <Text style={styles.dropdownItemText}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Date of Birth */}
         <View style={styles.inputContainer}>
@@ -199,7 +210,7 @@ const SignupScreen = () => {
       </View>
 
       {/* Contact Information Section */}
-      <View style={[styles.sectionContainer, {marginTop: 20, display: activeSection === 'contact' ? 'flex' : 'none'}]}>
+      <View style={[styles.sectionContainer, {marginTop: 0, display: activeSection === 'contact' ? 'flex' : 'none'}]}>
         <Text style={styles.sectionTitle}>Contact Information</Text>
         
         <View style={styles.inputContainer}>
@@ -219,47 +230,48 @@ const SignupScreen = () => {
           <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Phone Number"
+            placeholder="03xxxxxxxxx"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
+            placeholderTextColor="#999"
           />
         </View>
 
         {/* Operator Selection Row */}
         <View style={styles.inputContainer}>
-          <Ionicons name="phone-portrait-outline" size={20} color="#666" style={styles.inputIcon} />
-          <View style={styles.operatorDropdownContainer}>
-            <TouchableWithoutFeedback onPress={() => setShowOperatorDropdown(!showOperatorDropdown)}>
-              <View style={styles.operatorInput}>
-                <Text style={phoneOperator ? styles.selectedText : styles.placeholderText}>
-                  {phoneOperator || 'Select Mobile Operator'}
-                </Text>
-                <Ionicons
-                  name={showOperatorDropdown ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color="#666"
-                />
-              </View>
-            </TouchableWithoutFeedback>
-            {showOperatorDropdown && (
-              <View style={styles.dropdownOptions}>
-                {['Jazz', 'Telenor', 'Zong', 'Ufone', 'SCOM'].map((operator) => (
-                  <TouchableOpacity
-                    key={operator}
-                    style={styles.dropdownOption}
-                    onPress={() => {
-                      setPhoneOperator(operator);
-                      setShowOperatorDropdown(false);
-                    }}
-                  >
-                    <Text style={styles.dropdownOptionText}>{operator}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
+          <Ionicons name="phone-portrait-outline" size={20} color="#16A34A" style={styles.inputIcon} />
+          <TouchableWithoutFeedback onPress={() => setShowOperatorDropdown(!showOperatorDropdown)}>
+            <View style={styles.genderInput}>
+              <Text style={phoneOperator ? styles.selectedText : styles.placeholderText}>
+                {phoneOperator || 'Select Mobile Operator'}
+              </Text>
+              <Ionicons 
+                name={showOperatorDropdown ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color="#666"
+                style={styles.dropdownIcon} 
+              />
+            </View>
+          </TouchableWithoutFeedback>
         </View>
+
+        {showOperatorDropdown && (
+          <View style={styles.dropdownContainer}>
+            {['Jazz', 'Telenor', 'Zong', 'Ufone'].map((operator) => (
+              <TouchableOpacity 
+                key={operator}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setPhoneOperator(operator);
+                  setShowOperatorDropdown(false);
+                }}
+              >
+                <Text style={styles.dropdownItemText}>{operator}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View style={styles.inputContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
@@ -304,18 +316,22 @@ const SignupScreen = () => {
         </View>
       </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.continueButton}>
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.footerText}>
-          Forgot Password?{" "}
-          <Link href="/auth/ForgotPasswordScreen" style={styles.resetLink}>
-            Reset
-          </Link>
-        </Text>
-      </View>
+      {activeSection === 'personal' ? (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={styles.continueButton}
+            onPress={() => setActiveSection('contact')}
+          >
+            <Text style={styles.continueButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.continueButton}>
+            <Text style={styles.continueButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+      )}
         </ScrollView>
       </KeyboardAvoidingView>
       
@@ -354,9 +370,8 @@ const styles = StyleSheet.create({
   sectionContainer: {
     width: '100%',
     marginBottom: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: 'transparent',
+    padding: 0,
   },
   sectionTitle: {
     fontSize: 18,
@@ -367,57 +382,30 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E1E0E0",
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 25,
     marginBottom: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     height: 50,
+    borderWidth: 1,
+    borderColor: "#E1E0E0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    marginLeft: 8,
+    color: '#333',
+    paddingVertical: 0,
+    height: '100%',
+    marginLeft: 0,
   },
   inputIcon: {
-    marginRight: 8,
-  },
-  operatorDropdownContainer: {
-    position: 'relative',
-    flex: 1,
-  },
-  operatorInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    height: 40,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 6,
-  },
-  dropdownOptions: {
-    position: 'absolute',
-    top: 45,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    zIndex: 1000,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  dropdownOption: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  dropdownOptionText: {
-    fontSize: 14,
-    color: '#333',
+    marginRight: 12,
+    color: '#16A34A',
   },
   buttonContainer: {
     width: '100%',
@@ -485,25 +473,22 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   dropdownItem: {
-    padding: 12,
+    padding: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    minHeight: 20,
+    justifyContent: 'center',
   },
   dropdownItemText: {
     fontSize: 16,
     color: '#333',
   },
-  genderContainer: {
-    flexDirection: 'row',
+  genderInput: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  genderOption: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E1E0E0',
+    paddingRight: 8,
   },
   genderSelected: {
     backgroundColor: '#e6f7e6',
@@ -586,11 +571,16 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     backgroundColor: "#16A34A",
-    borderRadius: 8,
+    borderRadius: 25,
     height: 50,
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   continueButtonText: {
     color: "#fff",
