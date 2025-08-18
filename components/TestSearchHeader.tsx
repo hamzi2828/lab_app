@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BRAND_GREEN } from "../constants/Colors";
 
@@ -27,7 +28,11 @@ const TestSearchHeader: React.FC<Props> = ({
   onSearchChange,
 }) => {
   return (
-    <View style={styles.wrap}>
+    <SafeAreaView style={styles.safeWrap} edges={["top", "left", "right"]}>
+      <View style={[
+        styles.wrap,
+        Platform.OS === "android" && { paddingTop: Math.max((StatusBar.currentHeight || 0) - 12, 0) }
+      ]}>
       {/* Top Row */}
       <View style={styles.topRow}>
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -47,13 +52,13 @@ const TestSearchHeader: React.FC<Props> = ({
       <View style={styles.tabsRow}>
         <Tab
           label="General Tests"
-          icon={<MaterialCommunityIcons name="test-tube" size={24} color={activeTab === "general" ? BRAND_GREEN : "#9ec9ae"} />}
+          icon={<MaterialCommunityIcons name="test-tube" size={24} color={activeTab === "general" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "general"}
           onPress={() => onTabChange("general")}
         />
         <Tab
           label="All Tests"
-          icon={<Ionicons name="water-outline" size={24} color={activeTab === "all" ? BRAND_GREEN : "#9ec9ae"} />}
+          icon={<Ionicons name="water-outline" size={24} color={activeTab === "all" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "all"}
           onPress={() => onTabChange("all")}
         />
@@ -61,12 +66,11 @@ const TestSearchHeader: React.FC<Props> = ({
           label="All Packages"
           icon={<Ionicons name="cube-outline" size={24} color={activeTab === "packages" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "packages"}
-          highlight
           onPress={() => onTabChange("packages")}
         />
         <Tab
           label="Diseases"
-          icon={<Ionicons name="star-outline" size={24} color={activeTab === "diseases" ? BRAND_GREEN : "#9ec9ae"} />}
+          icon={<Ionicons name="star-outline" size={24} color={activeTab === "diseases" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "diseases"}
           onPress={() => onTabChange("diseases")}
         />
@@ -83,14 +87,15 @@ const TestSearchHeader: React.FC<Props> = ({
           placeholderTextColor="#9aa0a6"
         />
       </View>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
-const Tab = ({ label, icon, active, onPress, highlight }: { label: string; icon: React.ReactNode; active: boolean; onPress: () => void; highlight?: boolean }) => {
+const Tab = ({ label, icon, active, onPress }: { label: string; icon: React.ReactNode; active: boolean; onPress: () => void }) => {
   return (
-    <TouchableOpacity style={[styles.tab, highlight && styles.tabHighlight]} onPress={onPress} activeOpacity={0.85}>
-      <View style={[styles.tabIcon, highlight && styles.tabIconHighlight]}>
+    <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.85}>
+      <View style={[styles.tabIcon, active && styles.tabIconActive]}>
         {icon}
       </View>
       <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
@@ -99,9 +104,12 @@ const Tab = ({ label, icon, active, onPress, highlight }: { label: string; icon:
 };
 
 const styles = StyleSheet.create({
+  safeWrap: {
+    backgroundColor: "#e6f4ea",
+  },
   wrap: {
     backgroundColor: "#e6f4ea",
-    paddingTop: 8,
+    paddingTop: 0,
     paddingBottom: 12,
     paddingHorizontal: 16,
   },
@@ -142,9 +150,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
-  tabHighlight: {
-    
-  },
   tabIcon: {
     width: 54,
     height: 54,
@@ -155,7 +160,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#e6f4ea",
   },
-  tabIconHighlight: {
+  tabIconActive: {
     backgroundColor: BRAND_GREEN,
     borderColor: BRAND_GREEN,
   },
@@ -166,7 +171,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   tabLabelActive: {
-    color: "#333",
+    color: BRAND_GREEN,
+    fontWeight: "700",
   },
   searchWrap: {
     marginTop: 16,

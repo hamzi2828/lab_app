@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
 import TestSearchHeader, { TabKey } from "../../components/TestSearchHeader";
 
+const categories: TabKey[] = ["general", "packages", "diseases"]; // "all" is computed
 const mockData = Array.from({ length: 20 }).map((_, i) => ({
   id: String(i + 1),
   title: `Test ${i + 1}`,
   price: `${(i + 1) * 1000} PKR`,
+  category: categories[i % categories.length] as Exclude<TabKey, "all">,
 }));
 
 const AllTests = () => {
@@ -16,16 +18,18 @@ const AllTests = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("packages");
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(
-    () =>
-      mockData.filter((x) =>
-        x.title.toLowerCase().includes(search.trim().toLowerCase())
-      ),
-    [search]
-  );
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return mockData.filter((x: any) => {
+      const matchesSearch = x.title.toLowerCase().includes(q);
+      const matchesTab = activeTab === "all" ? true : x.category === activeTab;
+      return matchesSearch && matchesTab;
+    });
+  }, [search, activeTab]);
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <TestSearchHeader
         selectedCity={city}
         onBack={() => router.back()}
