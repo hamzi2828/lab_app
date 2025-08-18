@@ -8,7 +8,7 @@ const productData = [
   {
     id: "1",
     title: "Samsung Galaxy S24",
-    image: require("../../assets/images/iphone.png"),
+    image: require("../assets/images/iphone.png"),
     originalPrice: "£449",
     discountedPrice: "£299.99",
     badges: ["50% off", "Refurbished"],
@@ -17,7 +17,7 @@ const productData = [
   {
     id: "2",
     title: "iPhone 14 Pro Max",
-    image: require("../../assets/images/samsung.png"),
+    image: require("../assets/images/samsung.png"),
     originalPrice: "£999",
     discountedPrice: "£799.99",
     badges: ["30% off", "Refurbished"],
@@ -26,7 +26,7 @@ const productData = [
   {
     id: "3",
     title: "Google Pixel 7 Pro",
-    image: require("../../assets/images/iphone.png"),
+    image: require("../assets/images/iphone.png"),
     originalPrice: "£599",
     discountedPrice: "£499.99",
     badges: ["20% off", "Refurbished"],
@@ -35,7 +35,7 @@ const productData = [
   {
     id: "4",
     title: "OnePlus 11",
-    image: require("../../assets/images/samsung.png"),
+    image: require("../assets/images/samsung.png"),
     originalPrice: "£699",
     discountedPrice: "£599.99",
     badges: ["10% off", "Refurbished"],
@@ -44,7 +44,7 @@ const productData = [
   {
     id: "5",
     title: "Samsung Galaxy Z Fold 5",
-    image: require("../../assets/images/samsung.png"),
+    image: require("../assets/images/samsung.png"),
     originalPrice: "£1,299",
     discountedPrice: "£1,099.99",
     badges: ["15% off", "Brand New"],
@@ -53,8 +53,8 @@ const productData = [
   {
     id: "6",
     title: "Xiaomi Mi 13 Ultra",
-    image: require("../../assets/images/iphone.png"),
-    image2: require("../../assets/images/iphone.png"),
+    image: require("../assets/images/iphone.png"),
+    image2: require("../assets/images/iphone.png"),
     originalPrice: "£899",
     discountedPrice: "£699.99",
     badges: ["20% off", "Brand New"],

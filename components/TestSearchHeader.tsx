@@ -38,7 +38,7 @@ const TestSearchHeader: React.FC<Props> = ({
       </View>
 
       {/* City Selector */}
-      <TouchableOpacity style={styles.cityBtn} activeOpacity={0.8} onPress={onCityPress}>
+      <TouchableOpacity style={[styles.cityBtn, { alignSelf: 'center' }]} activeOpacity={0.8} onPress={onCityPress}>
         <Text style={styles.cityText}>{selectedCity}</Text>
         <Ionicons name="chevron-down" size={18} color={BRAND_GREEN} />
       </TouchableOpacity>
@@ -117,13 +117,13 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   cityBtn: {
-    alignSelf: "flex-start",
+    alignSelf: "center",
     borderWidth: 1,
     borderColor: "#cfe9db",
     backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 50,
+    paddingVertical: 8,
+    borderRadius: 999,
     flexDirection: "row",
     alignItems: "center",
   },
