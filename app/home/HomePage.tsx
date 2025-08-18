@@ -10,10 +10,9 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import Header from "../common/Header";
 import HomeSlider from "./HomeSlider";
-import CategoryList from "./CategoryList";
 import DealOfTheDay from "./DealOfTheDay";
-import ProductCard from "./ProductCard";
-import TrendingProducts from "./TrendingProducts";
+import ProductCardHome from "../../components/ProductHome";
+import QuickActions from "../../components/QuickActions";
 
 const HomePage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -27,30 +26,17 @@ const HomePage = () => {
   const sections = [
     { key: "header", component: <Header /> },
     { key: "slider", component: <HomeSlider /> },
-    {
-      key: "categories",
-      component: (
-        <View>
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Categories</Text>
-            <TouchableOpacity onPress={handleSeeAll}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <CategoryList />
-        </View>
-      ),
-    },
+    { key: "quickActions", component: <QuickActions /> },
+
     { key: "dealOfTheDay", component: <DealOfTheDay /> },
     {
       key: "productCards",
       component: (
         <View>
           <View style={styles.header}>
-            <Text style={styles.headerText}>More Products</Text>
+            <Text style={styles.headerText}>Tests </Text>
           </View>
-          <ProductCard />
-          <ProductCard />
+          <ProductCardHome />
         </View>
       ),
     },

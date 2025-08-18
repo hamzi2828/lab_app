@@ -24,3 +24,6 @@ export const Colors = {
     tabIconSelected: tintColorDark,
   },
 };
+
+// App brand colors
+export const BRAND_GREEN = '#28a745';

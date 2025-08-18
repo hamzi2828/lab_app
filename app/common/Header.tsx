@@ -72,6 +72,7 @@ const styles = StyleSheet.create({
   },
   iconsContainer: {
     flexDirection: "row",
+    marginLeft: -25,
   },
   icon: {
     marginHorizontal: 5,
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 5,
+    marginLeft: 2,
     paddingHorizontal: 8,
     paddingVertical: 4,
     backgroundColor: '#f5f5f5',
