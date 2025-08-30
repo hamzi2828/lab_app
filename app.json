@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ZextonsApp",
-    "slug": "ZextonsApp",
+    "name": "LabApp",
+    "slug": "LabApp",
     "newArchEnabled": true,
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arsamjaved.ZextonsApp"
+      "package": "com.arsamjaved.LabApp"
     },
     "web": {
       "bundler": "metro",

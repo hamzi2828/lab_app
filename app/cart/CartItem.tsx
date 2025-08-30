@@ -1,9 +1,17 @@
-import React, { useState } from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity, ImageSourcePropType } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const CartItem = ({ item }) => {
-  const [quantity, setQuantity] = useState(1);
+type CartItemData = {
+  id: string;
+  title: string;
+  price: string;
+  image: string | ImageSourcePropType;
+};
+
+type Props = { item: CartItemData };
+
+const CartItem: React.FC<Props> = ({ item }) => {
 
   return (
     <View style={styles.container}>
@@ -27,29 +35,12 @@ const CartItem = ({ item }) => {
       {/* Product Details */}
       <View style={styles.detailsContainer}>
         <Text style={styles.productTitle}>{item.title}</Text>
-        <Text style={styles.variantText}>Variant: {item.variant}</Text>
         <View style={styles.priceContainer}>
           <Text style={styles.price}>{item.price}</Text>
-          {/* Quantity Controls */}
-          <View style={styles.quantityContainer}>
-            <TouchableOpacity
-              onPress={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
-              style={styles.quantityButton}
-            >
-              <Ionicons name="remove" size={18} color="black" />
-            </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity}</Text>
-            <TouchableOpacity
-              onPress={() => setQuantity(quantity + 1)}
-              style={styles.quantityButton}
-            >
-              <Ionicons name="add" size={18} color="black" />
-            </TouchableOpacity>
-            {/* Delete Button */}
-            <TouchableOpacity style={styles.deleteButton}>
-              <Ionicons name="trash-outline" size={18} color="black" />
-            </TouchableOpacity>
-          </View>
+          {/* Delete Button */}
+          <TouchableOpacity style={styles.deleteButton}>
+            <Ionicons name="trash-outline" size={18} color="black" />
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -105,25 +96,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "black",
     marginTop: 8,
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  quantityButton: {
-    width: 25,
-    height: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 15,
-  },
-  quantityText: {
-    marginHorizontal: 10,
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "black",
   },
   deleteButton: {
     marginLeft: 10,

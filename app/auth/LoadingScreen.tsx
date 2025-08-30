@@ -4,7 +4,7 @@ import React from "react";
 const LoadingScreen = () => {
   return (
     <View style={styles.container}>
-      <Image source={require("../../assets/images/mainlogo.png")} />
+      <Image source={require("../../assets/images/mainlogo.jpg")} />
     </View>
   );
 };

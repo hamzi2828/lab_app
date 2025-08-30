@@ -14,19 +14,18 @@ import CartHeader from "./CartHeader";
 import DeliverHeader from "./DeliveryHeader";
 import CartItem from "./CartItem";
 import { useRouter } from "expo-router";
+import { BRAND_GREEN } from "../../constants/Colors";
 
 const productData = [
   {
     id: "1",
     title: "Samsung S24 ultra - Unlocked 32GB Black Excellent",
-    variant: "Grey",
     price: "£399.99",
     image: require("../../assets/images/samsung.png"),
   },
   {
     id: "2",
     title: "Samsung S24 ultra - Unlocked 32GB Black Excellent",
-    variant: "Grey",
     price: "£399.99",
     image: require("../../assets/images/samsung.png"),
   },
@@ -40,20 +39,19 @@ const Cart = () => {
   const handleNavigate = () => {
     setIsModalVisible(false); // Close the Modal first
     setTimeout(() => {
-      return router.push("cart/NewAddress");
+      return router.push("/cart/NewAddress");
     }, 200);
   };
   const handleNavigatee = () => {
     setIsModalVisible(false); // Close the Modal first
     setTimeout(() => {
-      return router.push("cart/PaymentMethod");
+      return router.push("/cart/PaymentMethod");
     }, 200);
   };
 
   return (
     <View style={styles.container}>
       <StatusBar />
-      <CartHeader />
       <DeliverHeader />
       <FlatList
         data={productData}
@@ -80,12 +78,20 @@ const Cart = () => {
           <Text style={[styles.summaryText, styles.totalText]}>Totals</Text>
           <Text style={[styles.summaryText, styles.totalText]}>£4570.99</Text>
         </View>
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={() => setIsModalVisible(true)}
-        >
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
+        <View style={styles.actionBar}>
+          <TouchableOpacity
+            style={[styles.actionSegment, styles.actionLeft]}
+            onPress={() => router.push("/home/AllTests")}
+          >
+            <Text style={[styles.actionText, styles.actionTextMuted]}>Add Test(s)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionSegment, styles.actionRight]}
+            onPress={() => setIsModalVisible(true)}
+          >
+            <Text style={[styles.actionText, styles.actionTextPrimary]}>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       {/* Modal for Address Selection */}
       <Modal
@@ -206,6 +212,34 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  actionBar: {
+    flexDirection: "row",
+    marginTop: 10,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  actionSegment: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionLeft: {
+    backgroundColor: "#ECECEC",
+  },
+  actionRight: {
+    backgroundColor: BRAND_GREEN,
+  },
+  actionText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  actionTextMuted: {
+    color: "#333",
+  },
+  actionTextPrimary: {
+    color: "#fff",
   },
   modalContainer: {
     flex: 1,

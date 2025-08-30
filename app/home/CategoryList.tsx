@@ -12,7 +12,7 @@ const categories = [
   {
     id: "3",
     name: "Xiomi",
-    image: require("../../assets/images/mainlogo.png"),
+    image: require("../../assets/images/mainlogo.jpg"),
   },
   { id: "4", name: "Pixel", image: require("../../assets/images/splash.png") },
   {
