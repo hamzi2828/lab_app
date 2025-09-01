@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp } from "@react-navigation/native";
 
-import HomePage from "../home/HomePage";
+import HomePage from "../home/HomePageScreen";
 import Profile from "../profile/Profile";
 import Categories from "../categories/Categories";
 import Cart from "../cart/Cart";
@@ -11,10 +11,10 @@ import AllProducts from "../home/AllProducts";
 
 type RootParamList = {
   Home: undefined;
-  Categories: undefined;
+  "Lab Tests": undefined;
+  Locations: undefined;
   Cart: undefined;
   Profile: undefined;
-  Explore: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootParamList>();
@@ -50,9 +50,9 @@ const AppNavigator = () => {
 
           if (route.name === "Home") {
             iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "Categories") {
+          } else if (route.name === "Lab Tests") {
             iconName = focused ? "grid" : "grid-outline";
-          } else if (route.name === "Explore") {
+          } else if (route.name === "Locations") {
             iconName = focused ? "navigate" : "navigate-outline";
           } else if (route.name === "Cart") {
             iconName = focused ? "cart" : "cart-outline";
@@ -77,8 +77,8 @@ const AppNavigator = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomePage} />
-      <Tab.Screen name="Categories" component={Categories} />
-      <Tab.Screen name="Explore" component={AllProducts} />
+      <Tab.Screen name="Lab Tests" component={Categories} />
+      <Tab.Screen name="Locations" component={AllProducts} />
       <Tab.Screen name="Cart" component={Cart} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>

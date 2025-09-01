@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useRouter } from "expo-router";
 import AppNavigator from "../appnavigator/AppNavigator";
+import { LinearGradient } from 'expo-linear-gradient';
 
 type AuthMethod = 'email' | 'phone' | 'username';
 
@@ -24,6 +25,7 @@ const LoginScreen = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const router = useRouter();
 
   const handleContinue = () => {
@@ -43,7 +45,7 @@ const LoginScreen = () => {
       case 'phone':
         return (
           <View style={styles.inputContainer}>
-            <Ionicons name="call" size={20} color="#666" style={styles.inputIcon} />
+            <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Phone Number"
@@ -56,7 +58,7 @@ const LoginScreen = () => {
       case 'username':
         return (
           <View style={styles.inputContainer}>
-            <Ionicons name="person" size={20} color="#666" style={styles.inputIcon} />
+            <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Username"
@@ -70,10 +72,10 @@ const LoginScreen = () => {
       default:
         return (
           <View style={styles.inputContainer}>
-            <Ionicons name="mail" size={20} color="#666" style={styles.inputIcon} />
+            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Email Address"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -99,8 +101,8 @@ const LoginScreen = () => {
           />
 
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeTitle}>Welcome</Text>
-            <Text style={styles.subtitle}>Sign in to your account</Text>
+            <Text style={styles.subtitle}>Sign in to Continue</Text>
+
           </View>
           
           <View style={styles.authMethodsContainer}>
@@ -112,7 +114,7 @@ const LoginScreen = () => {
               onPress={() => setAuthMethod('email')}
             >
               <Ionicons 
-                name="mail" 
+                name="mail-outline" 
                 size={20} 
                 color={authMethod === 'email' ? '#0d9b1e' : '#666'} 
               />
@@ -132,7 +134,7 @@ const LoginScreen = () => {
               onPress={() => setAuthMethod('phone')}
             >
               <Ionicons 
-                name="call" 
+                name="call-outline" 
                 size={20} 
                 color={authMethod === 'phone' ? '#0d9b1e' : '#666'} 
               />
@@ -152,7 +154,7 @@ const LoginScreen = () => {
               onPress={() => setAuthMethod('username')}
             >
               <Ionicons 
-                name="person" 
+                name="person-outline" 
                 size={20} 
                 color={authMethod === 'username' ? '#0d9b1e' : '#666'} 
               />
@@ -163,12 +165,13 @@ const LoginScreen = () => {
                 Username
               </Text>
             </TouchableOpacity>
+
           </View>
 
-          
           {renderAuthInput()}
 
           <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
@@ -181,26 +184,47 @@ const LoginScreen = () => {
               style={styles.eyeIcon}
             >
               <Ionicons
-                name={showPassword ? "eye" : "eye-off"}
+                name={showPassword ? "eye-outline" : "eye-off-outline"}
                 size={20}
                 color="gray"
               />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
+          <TouchableOpacity 
+            onPress={() => router.push('/auth/ForgotPasswordScreen')}
+            style={styles.forgotPasswordContainer}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={styles.forgotPasswordText}>Forgot Password ?</Text>
           </TouchableOpacity>
 
-          <Text style={styles.signupText}>
-            Don’t have an Account?{" "}
-            <Link href="/auth/SignupScreen" style={styles.signupLink}>
-              Create One
+          <TouchableOpacity
+            onPress={handleContinue}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#3c5e45', '#0d9b1e']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.continueButton}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an Account? </Text>
+            <Link href="/auth/SignupScreen" style={[styles.signupText, styles.signupLink]}>
+              Sign Up
             </Link>
-          </Text>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -220,9 +244,10 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 300,
-    height: 150,
+    height: 120,
     alignSelf: 'center',
-    marginBottom: 30,  // Increased from 10 to 50px
+    marginBottom: 10,  // Increased from 10 to 50px
+    marginTop: -20,
   },
   authMethodsContainer: {
     flexDirection: 'row',
@@ -242,7 +267,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   authButtonActive: {
-    backgroundColor: '#e6f7e6',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: '#0d9b1e',
   },
@@ -268,18 +293,21 @@ const styles = StyleSheet.create({
   welcomeContainer: {
     alignSelf: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 10,
     width: '100%',
   },
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
-  },
   subtitle: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#666',
-    marginTop: 4,
+    marginTop: 8,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  gradientLine: {
+    height: 2,
+    width: '80%',
+    alignSelf: 'center',
+    marginTop: 8,
   },
   title: {
     fontSize: 32,
@@ -292,7 +320,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 25, // Increased for more rounded corners
-    marginBottom: 16,
+    marginBottom: 20,
     paddingHorizontal: 20,
     height: 50,
     borderWidth: 1,
@@ -318,8 +346,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   continueButton: {
-    backgroundColor: "#16A34A",
-    borderRadius: 25, // Matches the input field's capsule style
+    borderRadius: 25,
     height: 50,
     alignItems: "center",
     justifyContent: "center",
@@ -329,24 +356,71 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     marginVertical: 16,
+    width: '100%',
   },
   continueButtonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
   },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    flexWrap: 'wrap',
+  },
   signupText: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "#333",
+    color: '#666',
+    textAlign: 'center',
   },
   signupLink: {
-    color: "#000",
-    fontWeight: "600",
-    marginLeft: 4,
+    color: '#0d9b1e',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+
+  checkboxChecked: {
+    backgroundColor: '#0d9b1e',
+    borderColor: '#0d9b1e',
+  },
+  termsText: {
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  termsLink: {
+    color: '#0d9b1e',
+    textDecorationLine: 'underline',
+  },
+  forgotPasswordContainer: {
+    alignSelf: 'flex-start',
+    marginBottom: 1,
+  },
+  forgotPasswordText: {
+    color: '#0d9b1e',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    width: '100%',
+    marginTop: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#666',
+    fontSize: 14,
   },
   tabBarContainer: {
-    position: 'absolute',
+    position: 'absolute', 
     bottom: 0,
     left: 0,
     right: 0,

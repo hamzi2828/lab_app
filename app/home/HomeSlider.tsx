@@ -17,7 +17,7 @@ const HomeSlider = () => {
         {/* Slide 1 */}
         <View style={styles.slide}>
           <Image
-            source={require("../../assets/images/homesliderimg1.jpeg")}
+            source={require("../../assets/images/homesliderimg1.jpg")}
             style={styles.image}
             resizeMode="cover"
           />
@@ -26,7 +26,7 @@ const HomeSlider = () => {
         {/* Slide 2 */}
         <View style={styles.slide}>
           <Image
-            source={require("../../assets/images/homesliderimg2.jpeg")}
+            source={require("../../assets/images/homesliderimg2.jpg")}
             style={styles.image}
             resizeMode="cover"
           />

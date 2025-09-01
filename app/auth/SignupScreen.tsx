@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from "expo-router";
 import AppNavigator from "../appnavigator/AppNavigator";
 
@@ -24,14 +25,13 @@ const SignupScreen = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [phoneOperator, setPhoneOperator] = useState("");
-  const [showOperatorDropdown, setShowOperatorDropdown] = useState(false);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [gender, setGender] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeSection, setActiveSection] = useState<'personal' | 'contact'>('personal');
 
   return (
@@ -42,7 +42,13 @@ const SignupScreen = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.title}>Create an Account</Text>
+        <LinearGradient
+          colors={['#3c5e45', '#0d9b1e']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.titleUnderline}
+        />
 
       {/* Section Toggle Buttons */}
       <View style={styles.sectionToggleContainer}>
@@ -66,7 +72,6 @@ const SignupScreen = () => {
 
       {/* Personal Information Section */}
       <View style={[styles.sectionContainer, {display: activeSection === 'personal' ? 'flex' : 'none'}]}>
-        <Text style={styles.sectionTitle}>Personal Information</Text>
         
         {/* Title Selection */}
         <View style={styles.inputContainer}>
@@ -211,7 +216,6 @@ const SignupScreen = () => {
 
       {/* Contact Information Section */}
       <View style={[styles.sectionContainer, {marginTop: 0, display: activeSection === 'contact' ? 'flex' : 'none'}]}>
-        <Text style={styles.sectionTitle}>Contact Information</Text>
         
         <View style={styles.inputContainer}>
           <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
@@ -238,40 +242,6 @@ const SignupScreen = () => {
           />
         </View>
 
-        {/* Operator Selection Row */}
-        <View style={styles.inputContainer}>
-          <Ionicons name="phone-portrait-outline" size={20} color="#16A34A" style={styles.inputIcon} />
-          <TouchableWithoutFeedback onPress={() => setShowOperatorDropdown(!showOperatorDropdown)}>
-            <View style={styles.genderInput}>
-              <Text style={phoneOperator ? styles.selectedText : styles.placeholderText}>
-                {phoneOperator || 'Select Mobile Operator'}
-              </Text>
-              <Ionicons 
-                name={showOperatorDropdown ? "chevron-up" : "chevron-down"} 
-                size={16} 
-                color="#666"
-                style={styles.dropdownIcon} 
-              />
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-
-        {showOperatorDropdown && (
-          <View style={styles.dropdownContainer}>
-            {['Jazz', 'Telenor', 'Zong', 'Ufone'].map((operator) => (
-              <TouchableOpacity 
-                key={operator}
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setPhoneOperator(operator);
-                  setShowOperatorDropdown(false);
-                }}
-              >
-                <Text style={styles.dropdownItemText}>{operator}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         <View style={styles.inputContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
@@ -319,21 +289,60 @@ const SignupScreen = () => {
       {activeSection === 'personal' ? (
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
-            style={styles.continueButton}
             onPress={() => setActiveSection('contact')}
+            activeOpacity={0.8}
           >
-            <Text style={styles.continueButtonText}>Next</Text>
+            <LinearGradient
+              colors={['#3c5e45', '#0d9b1e']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.continueButton}
+            >
+              <Text style={styles.continueButtonText}>Next</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.continueButton}>
-            <Text style={styles.continueButtonText}>Submit</Text>
+      <View style={[styles.termsContainer, { display: 'flex' }]}>
+        <TouchableOpacity 
+          style={styles.checkboxContainer}
+          onPress={() => setAcceptedTerms(!acceptedTerms)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+            {acceptedTerms && (
+              <Ionicons name="checkmark" size={16} color="#fff" />
+            )}
+          </View>
+          <View style={styles.termsTextContainer}>
+            <Text style={styles.termsText}>
+              I agree to the <Text style={styles.termsLink} onPress={() => {}}>Terms of Service</Text> and <Text style={styles.termsLink} onPress={() => {}}>Privacy Policy</Text>
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+          <TouchableOpacity activeOpacity={0.8}>
+            <LinearGradient
+              colors={['#3c5e45', '#0d9b1e']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.continueButton}
+            >
+              <Text style={styles.continueButtonText}>Submit</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       )}
+      
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Already have an Account? </Text>
+          <Link href="/auth/LoginScreen" style={[styles.loginText, styles.loginLink]}>
+            Log In
+          </Link>
+        </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingView>s
       
       {/* Bottom Tab Navigation */}
       <View style={styles.tabBarContainer}>
@@ -344,6 +353,61 @@ const SignupScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  termsContainer: {
+    width: '100%',
+    marginVertical: 8,
+    paddingHorizontal: 16,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#666',
+    marginRight: 10,
+    marginTop: 3,
+    marginLeft: -10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#0d9b1e',
+    borderColor: '#0d9b1e',
+  },
+  termsTextContainer: {
+    flex: 1,
+  },
+  termsText: {
+    color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: '#0d9b1e',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    flexWrap: 'wrap',
+  },
+  loginText: {
+    color: '#666',
+    textAlign: 'center',
+  },
+  loginLink: {
+    color: '#0d9b1e',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+
   container: {
     flex: 1,
     width: "100%",
@@ -360,12 +424,20 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   title: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 12,
     alignSelf: "center",
     textAlign: "center",
     width: '100%',
+  },
+  titleUnderline: {
+    height: 6,
+    width: '30%',
+    alignSelf: 'center',
+    marginTop: -8,
+    marginBottom: 24,
+    borderRadius: 3,
   },
   sectionContainer: {
     width: '100%',
@@ -375,7 +447,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
     color: '#16A34A',
     marginBottom: 16,
   },
@@ -410,7 +481,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
     paddingHorizontal: 16,
-    marginTop: -30,
+    marginTop: -10,
   },
   sectionToggleContainer: {
     flexDirection: 'row',
@@ -570,12 +641,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   continueButton: {
-    backgroundColor: "#16A34A",
     borderRadius: 25,
-    height: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 16,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: 20,
+    width: '100%',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

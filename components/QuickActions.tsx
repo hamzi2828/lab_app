@@ -1,14 +1,19 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BRAND_GREEN } from "../constants/Colors";
+import reportsIcon from "../assets/icons/reports.png";
+import riderIcon from "../assets/icons/rider.png";
+import mybookingsIcon from "../assets/icons/mybooking.png";
+import feedbackIcon from "../assets/icons/feedback.png";
+
 
 const actions = [
   {
     key: "reports",
     labelTop: "View Reports",
     Icon: (color: string, size: number) => (
-      <Ionicons name="document-text-outline" size={size} color={color} />
+      <Image source={reportsIcon} style={{ width: size, height: size }} />
     ),
     onPress: () => {},
   },
@@ -16,7 +21,7 @@ const actions = [
     key: "homeSampling",
     labelTop: "Free Home Sampling",
     Icon: (color: string, size: number) => (
-      <MaterialCommunityIcons name="motorbike" size={size} color={color} />
+      <Image source={riderIcon} style={{ width: size, height: size }} />
     ),
     onPress: () => {},
   },
@@ -24,15 +29,15 @@ const actions = [
     key: "bookings",
     labelTop: "My Bookings",
         Icon: (color: string, size: number) => (
-      <Ionicons name="globe-outline" size={size} color={color} />
+      <Image source={mybookingsIcon} style={{ width: size, height: size }} />
     ),
     onPress: () => {},
   },
   {
-    key: "discountCards",
-    labelTop: "Discount Cards",
+    key: "feedback",
+    labelTop: "Feedback",
     Icon: (color: string, size: number) => (
-      <Ionicons name="card-outline" size={size} color={color} />
+      <Image source={feedbackIcon} style={{ width: size, height: size }} />
     ),
     onPress: () => {},
   },
