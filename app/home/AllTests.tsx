@@ -8,7 +8,7 @@ const categories: TabKey[] = ["general", "packages", "diseases"]; // "all" is co
 const mockData = Array.from({ length: 20 }).map((_, i) => ({
   id: String(i + 1),
   title: `Test ${i + 1}`,
-  price: `${(i + 1) * 1000} PKR`,
+  price: `${(i + 1) * 1000} Rs`,
   category: categories[i % categories.length] as Exclude<TabKey, "all">,
 }));
 

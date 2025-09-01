@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#fff",
     alignItems: "center",
+    marginTop: 30,
   },
   iconsContainer: {
     flexDirection: "row",

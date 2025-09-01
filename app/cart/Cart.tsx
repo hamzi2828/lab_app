@@ -10,8 +10,6 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons"; // Ensure this package is installed
-import CartHeader from "./CartHeader";
-import DeliverHeader from "./DeliveryHeader";
 import CartItem from "./CartItem";
 import { useRouter } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
@@ -19,15 +17,30 @@ import { BRAND_GREEN } from "../../constants/Colors";
 const productData = [
   {
     id: "1",
-    title: "Samsung S24 ultra - Unlocked 32GB Black Excellent",
-    price: "£399.99",
-    image: require("../../assets/images/samsung.png"),
+    title: "Complete Blood Count",
+    image: require("../../assets/tests/CBC.png"),
+    originalPrice: "Rs.449",
+    discountedPrice: "Rs.299.99",
+    badges: ["50% off"],
+    rating: "★★★★★",
   },
   {
     id: "2",
-    title: "Samsung S24 ultra - Unlocked 32GB Black Excellent",
-    price: "£399.99",
-    image: require("../../assets/images/samsung.png"),
+    title: "Hemoglobin A1C",
+    image: require("../../assets/tests/HBA1C.png"),
+    originalPrice: "Rs.999",
+    discountedPrice: "Rs.799.99",
+    badges: ["30% off"],
+    rating: "★★★★★",
+  },
+  {
+    id: "3",
+    title: "LFT",
+    image: require("../../assets/tests/LFT.png"),
+    originalPrice: "Rs.599",
+    discountedPrice: "Rs.499.99",
+    badges: ["20% off"],
+    rating: "★★★★☆",
   },
 ];
 
@@ -52,7 +65,6 @@ const Cart = () => {
   return (
     <View style={styles.container}>
       <StatusBar />
-      <DeliverHeader />
       <FlatList
         data={productData}
         renderItem={({ item }) => <CartItem item={item} />}
@@ -68,15 +80,11 @@ const Cart = () => {
         </View>
         <View style={styles.orderSummary}>
           <Text style={styles.summaryText}>Subtotals</Text>
-          <Text style={styles.summaryText}>£4562.99</Text>
-        </View>
-        <View style={styles.orderSummary}>
-          <Text style={styles.summaryText}>Shipping Cost</Text>
-          <Text style={styles.summaryText}>£8.00</Text>
+          <Text style={styles.summaryText}>Rs.4562.99</Text>
         </View>
         <View style={styles.orderSummary}>
           <Text style={[styles.summaryText, styles.totalText]}>Totals</Text>
-          <Text style={[styles.summaryText, styles.totalText]}>£4570.99</Text>
+          <Text style={[styles.summaryText, styles.totalText]}>Rs.4570.99</Text>
         </View>
         <View style={styles.actionBar}>
           <TouchableOpacity
@@ -147,6 +155,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    marginTop: 50,
   },
   flatListContainer: {
     paddingBottom: 150, // Add bottom padding to avoid overlap with footer

@@ -5,8 +5,12 @@ import { Ionicons } from "@expo/vector-icons";
 type CartItemData = {
   id: string;
   title: string;
-  price: string;
+  price?: string; // Make price optional
+  originalPrice?: string;
+  discountedPrice?: string;
   image: string | ImageSourcePropType;
+  badges?: string[];
+  rating?: string;
 };
 
 type Props = { item: CartItemData };
@@ -15,12 +19,10 @@ const CartItem: React.FC<Props> = ({ item }) => {
 
   return (
     <View style={styles.container}>
-      {/* Left Checkbox */}
-      <View style={styles.checkboxContainer}>
-        <View style={styles.checkbox}>
-          <Ionicons name="checkmark" size={16} color="#fff" />
-        </View>
-      </View>
+      {/* Delete Button */}
+      <TouchableOpacity style={styles.deleteButton}>
+        <Ionicons name="trash-outline" size={20} color="#ff4444" />
+      </TouchableOpacity>
 
       {/* Product Image */}
       <Image
@@ -36,11 +38,16 @@ const CartItem: React.FC<Props> = ({ item }) => {
       <View style={styles.detailsContainer}>
         <Text style={styles.productTitle}>{item.title}</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.price}>{item.price}</Text>
-          {/* Delete Button */}
-          <TouchableOpacity style={styles.deleteButton}>
-            <Ionicons name="trash-outline" size={18} color="black" />
-          </TouchableOpacity>
+          <View style={styles.priceContainer}>
+            {item.discountedPrice ? (
+              <>
+                <Text style={styles.discountedPrice}>{item.discountedPrice}</Text>
+                <Text style={styles.originalPrice}>{item.originalPrice}</Text>
+              </>
+            ) : (
+              <Text style={styles.itemPrice}>{item.price}</Text>
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -56,21 +63,10 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     backgroundColor: "#fff",
   },
-  checkboxContainer: {
-    marginRight: 10,
-  },
   priceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    backgroundColor: "#4CAF50",
-    borderRadius: 4,
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
   productImage: {
     width: 80,
@@ -91,17 +87,28 @@ const styles = StyleSheet.create({
     color: "gray",
     marginTop: 4,
   },
-  price: {
+  itemPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  originalPrice: {
     fontSize: 14,
-    fontWeight: "bold",
-    color: "black",
-    marginTop: 8,
+    color: '#999',
+    textDecorationLine: 'line-through',
+    marginLeft: 8,
+  },
+  discountedPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4CAF50',
   },
   deleteButton: {
-    marginLeft: 10,
+    marginRight: 10,
     justifyContent: "center",
     alignItems: "center",
+    padding: 8,
   },
-});
+}); 
 
 export default CartItem;
