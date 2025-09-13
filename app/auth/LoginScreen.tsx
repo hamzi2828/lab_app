@@ -4,19 +4,24 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useRouter } from "expo-router";
 import AppNavigator from "../appnavigator/AppNavigator";
 import { LinearGradient } from 'expo-linear-gradient';
-
-type AuthMethod = 'email' | 'phone' | 'username';
+import { styles } from "../../styles/auth/LoginScreen.styles";
+import {
+  validateLoginForm,
+  submitLoginForm,
+  LoginValidationErrors,
+  AuthMethod
+} from "../../services/loginValidation";
 
 const LoginScreen = () => {
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
@@ -26,44 +31,96 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [errors, setErrors] = useState<LoginValidationErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleContinue = () => {
-    // Handle login based on authMethod
-    console.log({
+  const handleContinue = async () => {
+    if (isLoading) return;
+
+    const loginData = {
       authMethod,
       email: authMethod === 'email' ? email : undefined,
       phone: authMethod === 'phone' ? phone : undefined,
       username: authMethod === 'username' ? username : undefined,
       password
-    });
-    router.push("/appnavigator/AppNavigator");
+    };
+
+    // Validate form
+    const validationErrors = validateLoginForm(loginData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
+    setIsLoading(true);
+
+    try {
+      const result = await submitLoginForm(loginData);
+
+      // Clear form on successful login
+      clearForm();
+
+      Alert.alert(
+        'Login Successful',
+        `Welcome back, ${result.data?.name || 'User'}!`,
+        [
+          {
+            text: 'Continue',
+            onPress: () => router.push("/home/HomePageScreen")
+          }
+        ]
+      );
+
+    } catch (error: any) {
+      Alert.alert(
+        'Login Failed',
+        error.message || 'Please check your credentials and try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearForm = () => {
+    setEmail("");
+    setPhone("");
+    setUsername("");
+    setPassword("");
+    setErrors({});
   };
 
   const renderAuthInput = () => {
     switch (authMethod) {
       case 'phone':
         return (
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, errors.phone && styles.inputContainerError]}>
             <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Phone Number"
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(text) => {
+                setPhone(text);
+                if (errors.phone) setErrors({...errors, phone: false});
+              }}
               keyboardType="phone-pad"
             />
           </View>
         );
       case 'username':
         return (
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, errors.username && styles.inputContainerError]}>
             <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Username"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (errors.username) setErrors({...errors, username: false});
+              }}
               autoCapitalize="none"
             />
           </View>
@@ -71,13 +128,16 @@ const LoginScreen = () => {
       case 'email':
       default:
         return (
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, errors.email && styles.inputContainerError]}>
             <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Email"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({...errors, email: false});
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -170,14 +230,17 @@ const LoginScreen = () => {
 
           {renderAuthInput()}
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, errors.password && styles.inputContainerError]}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
               value={password}
               secureTextEntry={!showPassword}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({...errors, password: false});
+              }}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
@@ -201,6 +264,7 @@ const LoginScreen = () => {
           <TouchableOpacity
             onPress={handleContinue}
             activeOpacity={0.8}
+            disabled={isLoading}
           >
             <LinearGradient
               colors={['#3c5e45', '#0d9b1e']}
@@ -208,7 +272,9 @@ const LoginScreen = () => {
               end={{ x: 1, y: 0.5 }}
               style={styles.continueButton}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueButtonText}>
+                {isLoading ? 'Signing In...' : 'Continue'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -235,230 +301,5 @@ const LoginScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: "100%",
-    backgroundColor: '#fff',
-  },
-  logo: {
-    width: 300,
-    height: 120,
-    alignSelf: 'center',
-    marginBottom: 10,  // Increased from 10 to 50px
-    marginTop: -20,
-  },
-  authMethodsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-    marginTop: 10,  // Added 10px top margin
-    width: '100%',
-  },
-  authButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    marginHorizontal: 4,
-  },
-  authButtonActive: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#0d9b1e',
-  },
-  authButtonText: {
-    marginLeft: 4,
-    color: '#666',
-    fontSize: 12,
-  },
-  authButtonTextActive: {
-    color: '#0d9b1e',
-    fontWeight: '600',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingTop:100,  // Reduced top padding
-    paddingBottom: 100,
-    width: "100%",
-  },
-  welcomeContainer: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-    width: '100%',
-  },
-  subtitle: {
-    fontSize: 20,
-    color: '#666',
-    marginTop: 8,
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  gradientLine: {
-    height: 2,
-    width: '80%',
-    alignSelf: 'center',
-    marginTop: 8,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 24,
-    alignSelf: "flex-start",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 25, // Increased for more rounded corners
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#E1E0E0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  inputIcon: {
-    marginRight: 12,
-    color: '#16A34A', // Matches the primary button color
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    paddingVertical: 0,
-    height: '100%',
-  },
-  eyeIcon: {
-    marginLeft: 8,
-  },
-  continueButton: {
-    borderRadius: 25,
-    height: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    marginVertical: 16,
-    width: '100%',
-  },
-  continueButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-    flexWrap: 'wrap',
-  },
-  signupText: {
-    color: '#666',
-    textAlign: 'center',
-  },
-  signupLink: {
-    color: '#0d9b1e',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
-
-  checkboxChecked: {
-    backgroundColor: '#0d9b1e',
-    borderColor: '#0d9b1e',
-  },
-  termsText: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  termsLink: {
-    color: '#0d9b1e',
-    textDecorationLine: 'underline',
-  },
-  forgotPasswordContainer: {
-    alignSelf: 'flex-start',
-    marginBottom: 1,
-  },
-  forgotPasswordText: {
-    color: '#0d9b1e',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-    width: '100%',
-    marginTop: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e0e0e0',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#666',
-    fontSize: 14,
-  },
-  tabBarContainer: {
-    position: 'absolute', 
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    zIndex: 1000,
-  },
-  socialButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 10,
-    height: 50,
-    marginTop: 16,
-    paddingHorizontal: 16,
-    justifyContent: "center",
-  },
-  googleButton: {
-    borderWidth: 1,
-    borderColor: "#4285F4",
-    backgroundColor: "#fff",
-  },
-  googleButtonText: {
-    fontSize: 16,
-    color: "#4285F4",
-    marginLeft: 12,
-    fontWeight: "600",
-  },
-  facebookButton: {
-    backgroundColor: "#1877F2",
-  },
-  facebookButtonText: {
-    fontSize: 16,
-    color: "#fff",
-    marginLeft: 12,
-    fontWeight: "600",
-  },
-});
 
 export default LoginScreen;

@@ -133,7 +133,7 @@ export const submitSignupForm = async (data: SignupFormData): Promise<any> => {
     console.log('Sending data to API:', apiData);
     
     try {
-      const response = await fetch('https://dev-hmis.erpsirius.xyz/api/register', {
+      const response = await fetch('https://hmis.rapidreporting.us/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

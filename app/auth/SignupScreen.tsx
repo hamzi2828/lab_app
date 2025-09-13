@@ -93,6 +93,21 @@ const SignupScreen = () => {
 
     try {
       await submitSignupForm(formData);
+
+      // Clear all input fields on successful registration
+      setTitle("");
+      setFirstname("");
+      setLastname("");
+      setGender("");
+      setDateOfBirth("");
+      setEmail("");
+      setPhoneNumber("");
+      setPassword("");
+      setConfirmPassword("");
+      setAcceptedTerms(false);
+      setErrors({});
+      setActiveSection('personal'); // Reset to first section
+
       Alert.alert('Success', 'Account created successfully!');
       // Navigate to login or home screen
     } catch (error) {
