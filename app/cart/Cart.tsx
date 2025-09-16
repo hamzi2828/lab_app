@@ -147,7 +147,7 @@ const Cart = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionSegment, styles.actionRight]}
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => router.push("/cart/BookingScreen" as any)}
           >
             <Text style={[styles.actionText, styles.actionTextPrimary]}>Next</Text>
           </TouchableOpacity>

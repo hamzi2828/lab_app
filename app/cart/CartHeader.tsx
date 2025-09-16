@@ -7,9 +7,16 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { Ionicons } from "react-native-vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
-const CartHeader = ({ navigation, title = "Your Cart" }) => {
+interface CartHeaderProps {
+  navigation: {
+    goBack: () => void;
+  };
+  title?: string;
+}
+
+const CartHeader: React.FC<CartHeaderProps> = ({ navigation, title = "Your Cart" }) => {
   return (
     <SafeAreaView>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
