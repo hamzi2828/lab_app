@@ -13,14 +13,17 @@ type CartItemData = {
   rating?: string;
 };
 
-type Props = { item: CartItemData };
+type Props = {
+  item: CartItemData;
+  onRemove?: () => void;
+};
 
-const CartItem: React.FC<Props> = ({ item }) => {
+const CartItem: React.FC<Props> = ({ item, onRemove }) => {
 
   return (
     <View style={styles.container}>
       {/* Delete Button */}
-      <TouchableOpacity style={styles.deleteButton}>
+      <TouchableOpacity style={styles.deleteButton} onPress={onRemove}>
         <Ionicons name="trash-outline" size={20} color="#ff4444" />
       </TouchableOpacity>
 

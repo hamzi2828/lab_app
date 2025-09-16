@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Text, FlatList, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { BRAND_GREEN } from "../constants/Colors";
 import ProductCard from "./ProductCard";
 import {
@@ -23,6 +24,14 @@ const ProductHome = () => {
     loadTests();
   }, []);
 
+  // Refresh tests and booking status every time the home screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Home screen focused - refreshing tests and booking status');
+      loadTests();
+    }, [])
+  );
+
   const loadTests = async () => {
     try {
       setLoading(true);
@@ -30,7 +39,7 @@ const ProductHome = () => {
 
       if (response.success) {
         setTests(response.data);
-        setUsingFallback(response.usingFallback || false);
+        setUsingFallback(false);
       }
     } catch (err: any) {
       console.error('Unexpected error in loadTests:', err);
@@ -47,12 +56,14 @@ const ProductHome = () => {
     return (
       <ProductCard
         title={item.name}
-        image={getTestImage(item, usingFallback)}
+        image={getTestImage(item)}
         originalPrice={formatPrice(item.price)}
         discountedPrice={calculateDiscountedPrice(item.price, 20)}
         badges={[discount]}
         onPress={() => console.log("Test selected:", item.name)}
         onBookPress={() => console.log("Book test:", item.name)}
+        testId={item.id}
+        testData={item}
       />
     );
   };

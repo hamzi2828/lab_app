@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   ImageSourcePropType,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from 'expo-linear-gradient';
 import { BRAND_GREEN } from "../constants/Colors";
 
 
@@ -19,6 +21,8 @@ export type ProductCardProps = {
   badges: string[];
   onPress: () => void;
   onBookPress?: () => void;
+  testId: number;
+  testData?: any; // Full test object for storage
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -29,7 +33,59 @@ const ProductCard: React.FC<ProductCardProps> = ({
   badges,
   onPress,
   onBookPress,
+  testId,
+  testData,
 }) => {
+  const [isBooked, setIsBooked] = useState(false);
+
+  useEffect(() => {
+    checkBookingStatus();
+  }, [testId]);
+
+  const checkBookingStatus = async () => {
+    try {
+      const bookedTests = await AsyncStorage.getItem('bookedTestsDetails');
+      if (bookedTests) {
+        const bookedTestsArray = JSON.parse(bookedTests);
+        setIsBooked(bookedTestsArray.some((test: any) => test.id === testId));
+      }
+    } catch (error) {
+      console.error('Error checking booking status:', error);
+    }
+  };
+
+  const handleBookPress = async () => {
+    try {
+      const bookedTests = await AsyncStorage.getItem('bookedTestsDetails');
+      let bookedTestsArray = bookedTests ? JSON.parse(bookedTests) : [];
+
+      if (isBooked) {
+        // Cancel booking - remove from array
+        bookedTestsArray = bookedTestsArray.filter((test: any) => test.id !== testId);
+        setIsBooked(false);
+      } else {
+        // Book test - add complete test details to array
+        if (testData && !bookedTestsArray.some((test: any) => test.id === testId)) {
+          const testToAdd = {
+            ...testData,
+            originalPrice,
+            discountedPrice,
+            badges
+          };
+          bookedTestsArray.push(testToAdd);
+        }
+        setIsBooked(true);
+      }
+
+      await AsyncStorage.setItem('bookedTestsDetails', JSON.stringify(bookedTestsArray));
+
+      if (onBookPress) {
+        onBookPress();
+      }
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+    }
+  };
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.badgeContainer}>
@@ -52,11 +108,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <Text style={styles.discountedPrice}>{discountedPrice}</Text>
           </View>
           <TouchableOpacity
-            style={styles.bookNowButton}
-            onPress={onBookPress ?? onPress}
+            style={[styles.bookNowButton, isBooked && styles.cancelButton]}
+            onPress={handleBookPress}
             activeOpacity={0.8}
           >
-            <Text style={styles.bookNowText}>Book Now</Text>
+            <Text style={[styles.bookNowText, isBooked && styles.cancelText]}>
+              {isBooked ? 'Cancel' : 'Book Now'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -137,7 +195,7 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: BRAND_GREEN, // green outline
+    borderColor: BRAND_GREEN,
     backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
@@ -146,6 +204,13 @@ const styles = StyleSheet.create({
     color: BRAND_GREEN,
     fontSize: 13,
     fontWeight: "700",
+  },
+  cancelButton: {
+    backgroundColor: BRAND_GREEN,
+    borderColor: BRAND_GREEN,
+  },
+  cancelText: {
+    color: "#fff",
   },
   rating: {
     fontSize: 14,

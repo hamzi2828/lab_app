@@ -19,7 +19,7 @@ const HomePage = () => {
   const router = useRouter();
 
   const handleSeeAll = () => {
-    router.push("/home/AllProducts");
+    router.push("/home/AllTests");
   };
 
   // Data for FlatList

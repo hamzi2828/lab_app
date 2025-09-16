@@ -10,7 +10,6 @@ export default function RootLayout() {
       <Stack.Screen name="auth/ForgotPasswordScreen" />
       <Stack.Screen name="auth/SignupScreen" />
       <Stack.Screen name="home/HomePageScreen" />
-      <Stack.Screen name="home/AllProducts" />
       <Stack.Screen name="common/Notifications" />
       <Stack.Screen name="common/Filters" />
       <Stack.Screen name="cart/Cart" />

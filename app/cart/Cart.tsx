@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
-  StyleSheet,
   FlatList,
   Text,
   TextInput,
@@ -10,43 +9,62 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons"; // Ensure this package is installed
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import CartItem from "./CartItem";
 import { useRouter } from "expo-router";
-import { BRAND_GREEN } from "../../constants/Colors";
-
-const productData = [
-  {
-    id: "1",
-    title: "Complete Blood Count",
-    image: require("../../assets/tests/CBC.png"),
-    originalPrice: "Rs.449",
-    discountedPrice: "Rs.299.99",
-    badges: ["50% off"],
-    rating: "★★★★★",
-  },
-  {
-    id: "2",
-    title: "Hemoglobin A1C",
-    image: require("../../assets/tests/HBA1C.png"),
-    originalPrice: "Rs.999",
-    discountedPrice: "Rs.799.99",
-    badges: ["30% off"],
-    rating: "★★★★★",
-  },
-  {
-    id: "3",
-    title: "LFT",
-    image: require("../../assets/tests/LFT.png"),
-    originalPrice: "Rs.599",
-    discountedPrice: "Rs.499.99",
-    badges: ["20% off"],
-    rating: "★★★★☆",
-  },
-];
+import { styles } from "../../styles/cart/Cart.styles";
+import { getTestImage } from "../../services/testsService";
 
 const Cart = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [bookedTests, setBookedTests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    loadBookedTests();
+  }, []);
+
+  // Check for booked tests every time the cart screen is focused/navigated to
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Cart screen focused - checking for booked tests');
+      setLoading(true);
+      loadBookedTests();
+    }, [])
+  );
+
+  const loadBookedTests = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('bookedTestsDetails');
+      if (stored) {
+        const tests = JSON.parse(stored);
+        setBookedTests(tests);
+      }
+    } catch (error) {
+      console.error('Error loading booked tests:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeFromCart = async (testId: number) => {
+    try {
+      const updatedTests = bookedTests.filter(test => test.id !== testId);
+      setBookedTests(updatedTests);
+      await AsyncStorage.setItem('bookedTestsDetails', JSON.stringify(updatedTests));
+    } catch (error) {
+      console.error('Error removing test from cart:', error);
+    }
+  };
+
+  const calculateTotal = () => {
+    return bookedTests.reduce((total, test) => {
+      const price = parseFloat(test.discountedPrice?.replace(/[^\d.]/g, '') || test.price || 0);
+      return total + price;
+    }, 0);
+  };
 
   // Navigate to the checkout screen
   const handleNavigate = () => {
@@ -62,13 +80,47 @@ const Cart = () => {
     }, 200);
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Loading cart...</Text>
+      </View>
+    );
+  }
+
+  if (bookedTests.length === 0) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ fontSize: 18, color: '#666' }}>Your cart is empty</Text>
+        <TouchableOpacity
+          style={{ marginTop: 20, backgroundColor: '#4CAF50', padding: 15, borderRadius: 10 }}
+          onPress={() => router.push('/home/AllTests')}
+        >
+          <Text style={{ color: 'white', fontSize: 16 }}>Browse Tests</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar />
       <FlatList
-        data={productData}
-        renderItem={({ item }) => <CartItem item={item} />}
-        keyExtractor={(item) => item.id}
+        data={bookedTests}
+        renderItem={({ item }) => (
+          <CartItem
+            item={{
+              id: item.id.toString(),
+              title: item.name,
+              image: getTestImage(item),
+              originalPrice: item.originalPrice,
+              discountedPrice: item.discountedPrice,
+              badges: item.badges
+            }}
+            onRemove={() => removeFromCart(item.id)}
+          />
+        )}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.flatListContainer}
       />
       <View style={styles.footer}>
@@ -80,11 +132,11 @@ const Cart = () => {
         </View>
         <View style={styles.orderSummary}>
           <Text style={styles.summaryText}>Subtotals</Text>
-          <Text style={styles.summaryText}>Rs.4562.99</Text>
+          <Text style={styles.summaryText}>Rs.{calculateTotal().toFixed(2)}</Text>
         </View>
         <View style={styles.orderSummary}>
           <Text style={[styles.summaryText, styles.totalText]}>Totals</Text>
-          <Text style={[styles.summaryText, styles.totalText]}>Rs.4570.99</Text>
+          <Text style={[styles.summaryText, styles.totalText]}>Rs.{(calculateTotal() + 8).toFixed(2)}</Text>
         </View>
         <View style={styles.actionBar}>
           <TouchableOpacity
@@ -151,146 +203,5 @@ const Cart = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    marginTop: 50,
-  },
-  flatListContainer: {
-    paddingBottom: 150, // Add bottom padding to avoid overlap with footer
-  },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-  },
-  couponContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  couponInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
-  },
-  closeContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  applyButton: {
-    backgroundColor: "#f0f0f0",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  applyButtonText: {
-    color: "#333",
-  },
-  orderSummary: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  summaryText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  totalText: {
-    fontWeight: "bold",
-  },
-  continueButton: {
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 5,
-    marginTop: 10,
-    alignItems: "center",
-  },
-  continueButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  actionBar: {
-    flexDirection: "row",
-    marginTop: 10,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-  actionSegment: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionLeft: {
-    backgroundColor: "#ECECEC",
-  },
-  actionRight: {
-    backgroundColor: BRAND_GREEN,
-  },
-  actionText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  actionTextMuted: {
-    color: "#333",
-  },
-  actionTextPrimary: {
-    color: "#fff",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-  },
-  modalHeader: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  addressItem: {
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-  },
-  addressType: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  addressName: {
-    fontSize: 14,
-    color: "#333",
-  },
-  addressDetails: {
-    fontSize: 12,
-    color: "#666",
-  },
-  addNewAddress: {
-    color: "#4CAF50",
-    fontSize: 14,
-    fontWeight: "bold",
-    marginVertical: 15,
-  },
-});
 
 export default Cart;

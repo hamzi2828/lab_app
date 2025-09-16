@@ -8,7 +8,7 @@ const ReturnedOrders = () => {
   const router = useRouter();
 
   const handleExploreProducts = () => {
-    router.push("/home/AllProducts");
+    router.push("/home/AllTests");
   };
 
   return (

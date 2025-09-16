@@ -31,14 +31,14 @@ const PaymentMethod = ({ navigation }) => {
   };
 
   const handleCloseModal = () => {
-    // Close the modal and navigate to AllProducts
+    // Close the modal and navigate to AllTests
     Animated.timing(slideAnim, {
       toValue: 0, // Slide down
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
       setModalVisible(false); // Hide the modal after animation
-      router.push("home/AllProducts"); // Navigate to AllProducts page
+      router.push("home/AllTests"); // Navigate to AllTests page
     });
   };
 

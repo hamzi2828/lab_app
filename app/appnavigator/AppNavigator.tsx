@@ -7,7 +7,7 @@ import HomePage from "../home/HomePageScreen";
 import Profile from "../profile/Profile";
 import Categories from "../categories/Categories";
 import Cart from "../cart/Cart";
-import AllProducts from "../home/AllProducts";
+import AllTests from "../home/AllTests";
 
 type RootParamList = {
   Home: undefined;
@@ -81,7 +81,7 @@ const AppNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomePage} />
       <Tab.Screen name="Lab Tests" component={Categories} />
-      <Tab.Screen name="Locations" component={AllProducts} />
+      <Tab.Screen name="Locations" component={AllTests} />
       <Tab.Screen name="Cart" component={Cart} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
