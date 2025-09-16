@@ -34,7 +34,7 @@ const HomePage = () => {
       component: (
         <View>
           <View style={styles.header}>
-            <Text style={styles.headerText}>Tests </Text>
+            <Text style={styles.headerText}>Discounted Tests </Text>
           </View>
           <ProductCardHome />
         </View>

@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
   },
   authButtonText: {
     marginLeft: 4,
-    color: '#666',
+    color: 'black',
     fontSize: 12,
   },
   authButtonTextActive: {
@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 20,
-    color: '#666',
+    color: 'black',
     marginTop: 8,
     marginBottom: 8,
     fontWeight: '600',

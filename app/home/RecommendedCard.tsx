@@ -49,9 +49,7 @@ const RecommendedCard = () => {
         <Pressable
           key={item.id}
           style={styles.card}
-          onPress={() =>
-            router.push({ pathname: "/home/ProductDetail", params: item })
-          } // Pass product details
+          onPress={() => console.log("ProductDetail removed - TODO: Add new navigation")} // Pass product details
         >
           <View style={styles.badgeContainer}>
             {(item.badges || []).map((badge, index) => (

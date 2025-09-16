@@ -76,9 +76,7 @@ const AllProducts = () => {
   const renderCard = ({ item }) => (
     <Pressable
       style={styles.card}
-      onPress={() =>
-        router.push({ pathname: "/home/ProductDetail", params: item })
-      }
+      onPress={() => console.log("ProductDetail removed - TODO: Add new navigation")}
     >
       <View style={styles.badgeContainer}>
         {item.badges.map((badge, index) => (

@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { BRAND_GREEN } from "../../constants/Colors";
-import TestSearchHeader, { TabKey } from "../../components/TestSearchHeader";
+import TestSearchHeader, { TabKey } from "./TestSearchHeader";
+import { styles } from "../../styles/alltest/AllTests.styles";
 
 const categories: TabKey[] = ["general", "packages", "diseases"]; // "all" is computed
 const mockData = Array.from({ length: 20 }).map((_, i) => ({
@@ -52,7 +52,7 @@ const AllTests = () => {
             </View>
             <TouchableOpacity
               style={styles.bookBtn}
-              onPress={() => router.push({ pathname: "/home/ProductDetail", params: item })}
+              onPress={() => console.log("ProductDetail removed - TODO: Add new navigation")}
               activeOpacity={0.8}
             >
               <Text style={styles.bookText}>Book</Text>
@@ -63,59 +63,5 @@ const AllTests = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#222",
-  },
-  row: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#f0f0f0",
-    marginLeft: 16,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#222",
-  },
-  price: {
-    marginTop: 4,
-    fontSize: 12,
-    color: BRAND_GREEN,
-    fontWeight: "700",
-  },
-  bookBtn: {
-    height: 32,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: BRAND_GREEN,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  bookText: {
-    color: BRAND_GREEN,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-});
 
 export default AllTests;

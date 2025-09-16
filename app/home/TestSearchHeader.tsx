@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Platform, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { BRAND_GREEN } from "../constants/Colors";
+import { BRAND_GREEN } from "../../constants/Colors";
+import { styles } from "../../styles/alltest/TestSearchHeader.styles";
 
 export type TabKey = "general" | "all" | "packages" | "diseases";
 
@@ -51,29 +52,30 @@ const TestSearchHeader: React.FC<Props> = ({
       {/* Tabs */}
       <View style={styles.tabsRow}>
         <Tab
-          label="General Tests"
+          label="All Tests"
           icon={<MaterialCommunityIcons name="test-tube" size={24} color={activeTab === "general" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "general"}
           onPress={() => onTabChange("general")}
         />
         <Tab
-          label="All Tests"
+          label="Blood Tests"
           icon={<Ionicons name="water-outline" size={24} color={activeTab === "all" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "all"}
           onPress={() => onTabChange("all")}
         />
-        <Tab
+     <Tab
+          label="Radiology"
+          icon={<Ionicons name="radio-outline" size={24} color={activeTab === "diseases" ? "#fff" : "#9ec9ae"} />}
+          active={activeTab === "diseases"}
+          onPress={() => onTabChange("diseases")}
+        />
+      <Tab
           label="All Packages"
           icon={<Ionicons name="cube-outline" size={24} color={activeTab === "packages" ? "#fff" : "#9ec9ae"} />}
           active={activeTab === "packages"}
           onPress={() => onTabChange("packages")}
         />
-        <Tab
-          label="Diseases"
-          icon={<Ionicons name="star-outline" size={24} color={activeTab === "diseases" ? "#fff" : "#9ec9ae"} />}
-          active={activeTab === "diseases"}
-          onPress={() => onTabChange("diseases")}
-        />
+       
       </View>
 
       {/* Search */}
@@ -102,98 +104,5 @@ const Tab = ({ label, icon, active, onPress }: { label: string; icon: React.Reac
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  safeWrap: {
-    backgroundColor: "#e6f4ea",
-  },
-  wrap: {
-    backgroundColor: "#e6f4ea",
-    paddingTop: 0,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#333",
-  },
-  cityBtn: {
-    alignSelf: "center",
-    borderWidth: 1,
-    borderColor: "#cfe9db",
-    backgroundColor: "#fff",
-    paddingHorizontal: 50,
-    paddingVertical: 8,
-    borderRadius: 999,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  cityText: {
-    marginRight: 6,
-    color: "#333",
-    fontWeight: "600",
-  },
-  tabsRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-  },
-  tabIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    borderWidth: 2,
-    borderColor: "#cfe9db",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#e6f4ea",
-  },
-  tabIconActive: {
-    backgroundColor: BRAND_GREEN,
-    borderColor: BRAND_GREEN,
-  },
-  tabLabel: {
-    marginTop: 6,
-    color: "#777",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  tabLabelActive: {
-    color: BRAND_GREEN,
-    fontWeight: "700",
-  },
-  searchWrap: {
-    marginTop: 16,
-    height: 44,
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#111",
-  },
-});
 
 export default TestSearchHeader;

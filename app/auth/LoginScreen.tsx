@@ -13,7 +13,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useRouter } from "expo-router";
-import AppNavigator from "../appnavigator/AppNavigator";
 import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from "../../styles/auth/LoginScreen.styles";
 import {
@@ -68,7 +67,7 @@ const LoginScreen = () => {
         [
           {
             text: 'Continue',
-            onPress: () => router.push("/home/HomePageScreen")
+            onPress: () => router.replace("/")
           }
         ]
       );
@@ -293,11 +292,6 @@ const LoginScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* Bottom Tab Navigation */}
-      <View style={styles.tabBarContainer}>
-        <AppNavigator />
-      </View>
     </View>
   );
 };

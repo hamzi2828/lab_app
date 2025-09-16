@@ -1,31 +1,91 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons"; // Make sure to install @expo/vector-icons
 import { useRouter } from "expo-router";
-import ProfileTopComponent from "./ProfileTopComponent";
+import { styles } from "../../styles/profile/Profile.styles";
+import { getUserData, isUserLoggedIn, logoutUser } from "../../services/loginValidation";
 
 const Profile = () => {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkLoginStatusAndFetchUserData();
+  }, []);
+
+  const checkLoginStatusAndFetchUserData = async () => {
+    try {
+      const loggedIn = await isUserLoggedIn();
+      setIsLoggedIn(loggedIn);
+
+      if (loggedIn) {
+        const data = await getUserData();
+        setUserData(data);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logoutUser();
+              setIsLoggedIn(false);
+              setUserData(null);
+              router.replace("/auth/LoginScreen");
+            } catch (error) {
+              console.error("Error during logout:", error);
+              Alert.alert("Error", "Failed to sign out. Please try again.");
+            }
+          }
+        }
+      ]
+    );
+  };
   return (
     <View style={styles.container}>
-      <ProfileTopComponent />
       {/* Profile Section */}
-      {/* <View style={styles.profileSection}>
-        <Image
-          source={{
-            uri: "https://via.placeholder.com/80", // Replace with your profile image
-          }}
-          style={styles.profileImage}
-        />
-        <View style={styles.infoContainer}>
-          <Text style={styles.name}>Gilbert Jones</Text>
-          <Text style={styles.email}>Gilbertjones001@gmail.com</Text>
-          <Text style={styles.phone}>121-224-7890</Text>
+{isLoggedIn && userData ? (
+        <View style={styles.profileSection}>
+          <View style={styles.infoContainer}>
+            <Text style={styles.name}>{userData.name || "User"}</Text>
+            <Text style={styles.email}>{userData.email || "No email"}</Text>
+            <Text style={styles.phone}>{userData.phone || "No phone"}</Text>
+            <Text style={styles.username}>@{userData.username || "username"}</Text>
+          </View>
+          <TouchableOpacity>
+            <MaterialIcons name="edit" size={24} color="#0d9b1e" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity>
-          <Text style={styles.edit}>Edit</Text>
-        </TouchableOpacity>
-      </View> */}
+      ) : !loading && (
+        <View style={styles.profileSection}>
+          <View style={styles.notLoggedInContainer}>
+            <Text style={styles.notLoggedInText}>Please sign in to view your profile</Text>
+            <TouchableOpacity
+              style={styles.signInButton}
+              onPress={() => router.push("/auth/LoginScreen")}
+            >
+              <Text style={styles.signInButtonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )} 
 
       {/* Options */}
       <TouchableOpacity
@@ -52,82 +112,20 @@ const Profile = () => {
       </TouchableOpacity>
 
       {/* Sign Out Button */}
-      <TouchableOpacity style={styles.signOut}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
+      {isLoggedIn ? (
+        <TouchableOpacity style={styles.signOut} onPress={handleSignOut}>
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.signOut}
+          onPress={() => router.push("/auth/LoginScreen")}
+        >
+          <Text style={styles.signInText}>Sign In</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 20,
-    paddingTop: 40,
-  },
-  profileSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 30,
-    backgroundColor: "#f9f9f9",
-    padding: 20,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#ddd",
-  },
-  infoContainer: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  email: {
-    fontSize: 14,
-    color: "#777",
-    marginVertical: 2,
-  },
-  phone: {
-    fontSize: 14,
-    color: "#777",
-  },
-  edit: {
-    fontSize: 14,
-    color: "#0d9b1e",
-    fontWeight: "600",
-  },
-  option: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 15,
-    elevation: 1,
-  },
-  optionText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  signOut: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  signOutText: {
-    fontSize: 16,
-    color: "#ff0000",
-    fontWeight: "600",
-  },
-});
 
 export default Profile;

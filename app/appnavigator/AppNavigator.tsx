@@ -65,8 +65,11 @@ const AppNavigator = () => {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#0d9b1e",
-        tabBarInactiveTintColor: "gray",
+        tabBarInactiveTintColor: "black",
         headerShown: false,
+        tabBarLabelStyle: {
+          color: "black",
+        },
         tabBarStyle: {
           width: "100%",
           alignItems: "center",

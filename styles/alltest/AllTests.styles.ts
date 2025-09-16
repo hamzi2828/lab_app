@@ -1,0 +1,55 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#222",
+  },
+  row: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  separator: {
+    height: 1,
+    backgroundColor: "#f0f0f0",
+    marginLeft: 16,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#222",
+  },
+  price: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#0d9b1e",
+    fontWeight: "700",
+  },
+  bookBtn: {
+    height: 32,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "#0d9b1e",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bookText: {
+    color: "#0d9b1e",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+});

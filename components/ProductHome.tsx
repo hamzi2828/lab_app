@@ -71,8 +71,8 @@ const ProductHome = () => {
       originalPrice={item.originalPrice}
       discountedPrice={item.discountedPrice}
       badges={item.badges}
-      onPress={() => router.push({ pathname: "/home/ProductDetail", params: item })}
-      onBookPress={() => router.push({ pathname: "/home/ProductDetail", params: item })}
+      onPress={() => console.log("ProductDetail removed - TODO: Add new navigation")}
+      onBookPress={() => console.log("ProductDetail removed - TODO: Add new navigation")}
     />
   );
 
