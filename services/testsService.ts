@@ -1,3 +1,4 @@
+
 export interface Test {
   id: number;
   name: string;
@@ -10,6 +11,31 @@ export interface Test {
   updated_at: string;
 }
 
+export interface AllTest {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  category: string;
+  report_title: string;
+  price: number;
+  has_sub_tests: boolean;
+  status: string;
+  image_url: string;
+  date_added: string;
+}
+
+export interface Pagination {
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+  next_page: number | null;
+  prev_page: number | null;
+}
+
 export interface TestsResponse {
   success: boolean;
   message: string;
@@ -17,9 +43,69 @@ export interface TestsResponse {
   count: number;
 }
 
-const API_BASE_URL = 'https://hmis.rapidreporting.us'; // Replace with your actual domain
+export interface AllTestsResponse {
+  success: boolean;
+  message: string;
+  data: AllTest[];
+  pagination: Pagination;
+}
 
+const API_BASE_URL = 'https://hmis.rapidreporting.us';
 
+export interface FetchAllTestsParams {
+  page?: number;
+  limit?: number;
+  type?: string;
+}
+
+export const fetchAllTests = async (params: FetchAllTestsParams = {}): Promise<AllTestsResponse> => {
+  const { page = 1, limit = 20, type = "all" } = params;
+
+  try {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      type: type // Filter tests by type: "all", "pathology", or "general"
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/all-tests?${queryParams}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+
+    const responseText = await response.text();
+
+    if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+      if (responseText.includes('The action you have requested is not allowed')) {
+        throw new Error('Tests service unavailable. Please try again later.');
+      }
+      throw new Error('Service temporarily unavailable.');
+    }
+
+    let result: AllTestsResponse;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      throw new Error('Invalid response from server');
+    }
+
+    if (!response.ok) {
+      throw new Error(result.message || `Failed to fetch tests: ${response.status}`);
+    }
+
+    if (result.hasOwnProperty('success') && !result.success) {
+      throw new Error(result.message || 'Failed to fetch tests');
+    }
+
+    return result;
+
+  } catch (error) {
+    throw error;
+  }
+};
 
 
 export const fetchAppHomeTests = async (limit: number = 6): Promise<TestsResponse> => {

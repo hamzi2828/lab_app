@@ -5,7 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BRAND_GREEN } from "../../constants/Colors";
 import { styles } from "../../styles/alltest/TestSearchHeader.styles";
 
-export type TabKey = "general" | "all" | "packages" | "diseases";
+export type TabKey = "all-tests" | "blood-tests" | "radiology" | "all-packages";
 
 type Props = {
   title?: string;
@@ -53,27 +53,27 @@ const TestSearchHeader: React.FC<Props> = ({
       <View style={styles.tabsRow}>
         <Tab
           label="All Tests"
-          icon={<MaterialCommunityIcons name="test-tube" size={24} color={activeTab === "general" ? "#fff" : "#9ec9ae"} />}
-          active={activeTab === "general"}
-          onPress={() => onTabChange("general")}
+          icon={<MaterialCommunityIcons name="test-tube" size={24} color={activeTab === "all-tests" ? "#fff" : "#9ec9ae"} />}
+          active={activeTab === "all-tests"}
+          onPress={() => onTabChange("all-tests")}
         />
         <Tab
-          label="Blood Tests"
-          icon={<Ionicons name="water-outline" size={24} color={activeTab === "all" ? "#fff" : "#9ec9ae"} />}
-          active={activeTab === "all"}
-          onPress={() => onTabChange("all")}
+          label="blood Tests"
+          icon={<Ionicons name="water-outline" size={24} color={activeTab === "blood-tests" ? "#fff" : "#9ec9ae"} />}
+          active={activeTab === "blood-tests"}
+          onPress={() => onTabChange("blood-tests")}
         />
      <Tab
           label="Radiology"
-          icon={<Ionicons name="radio-outline" size={24} color={activeTab === "diseases" ? "#fff" : "#9ec9ae"} />}
-          active={activeTab === "diseases"}
-          onPress={() => onTabChange("diseases")}
+          icon={<Ionicons name="radio-outline" size={24} color={activeTab === "radiology" ? "#fff" : "#9ec9ae"} />}
+          active={activeTab === "radiology"}
+          onPress={() => onTabChange("radiology")}
         />
       <Tab
           label="All Packages"
-          icon={<Ionicons name="cube-outline" size={24} color={activeTab === "packages" ? "#fff" : "#9ec9ae"} />}
-          active={activeTab === "packages"}
-          onPress={() => onTabChange("packages")}
+          icon={<Ionicons name="cube-outline" size={24} color={activeTab === "all-packages" ? "#fff" : "#9ec9ae"} />}
+          active={activeTab === "all-packages"}
+          onPress={() => onTabChange("all-packages")}
         />
        
       </View>

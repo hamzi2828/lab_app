@@ -52,4 +52,53 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
+  code: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2,
+  },
+  category: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 2,
+    textTransform: "capitalize",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#666",
+  },
+  loadMoreContainer: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  loadMoreBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+  },
+  loadMoreText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  paginationInfo: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#f8f9fa",
+    borderTopWidth: 1,
+    borderTopColor: "#e9ecef",
+  },
+  paginationText: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
 });
