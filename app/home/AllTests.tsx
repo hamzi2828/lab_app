@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import TestSearchHeader, { TabKey } from "./TestSearchHeader";
 import { styles } from "../../styles/alltest/AllTests.styles";
-import { fetchAllTests, AllTest, Pagination } from "../../services/testsService";
+import { fetchAllTests, AllTest, Pagination, formatPrice, calculateDiscountedPrice } from "../../services/testsService";
 import { BRAND_GREEN } from "../../constants/Colors";
+import { cartService } from "../../services/cartService";
 
 const AllTests = () => {
   const router = useRouter();
@@ -16,6 +18,7 @@ const AllTests = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [bookedTests, setBookedTests] = useState<number[]>([]);
 
   const getTypeForTab = (tab: TabKey): string => {
     switch (tab) {
@@ -65,6 +68,40 @@ const AllTests = () => {
     setPagination(null);
     loadTests(1);
   }, [activeTab]);
+
+  // Load booked tests when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      loadBookedTests();
+    }, [])
+  );
+
+  const loadBookedTests = async () => {
+    try {
+      const bookedIds = await cartService.getBookedTestIds();
+      setBookedTests(bookedIds);
+    } catch (error) {
+      console.error('Error loading booked tests:', error);
+    }
+  };
+
+  const handleBookPress = async (test: AllTest) => {
+    try {
+      const originalPrice = formatPrice(test.price);
+      const discountedPrice = calculateDiscountedPrice(test.price, 20);
+      const badges = ['20% off'];
+
+      const success = await cartService.toggleBooking(test, originalPrice, discountedPrice, badges);
+
+      if (success) {
+        // Reload booked test IDs to update UI
+        const updatedBookedIds = await cartService.getBookedTestIds();
+        setBookedTests(updatedBookedIds);
+      }
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+    }
+  };
 
   const handleLoadMore = () => {
     if (pagination?.has_next && !loading && !loadingMore) {
@@ -125,23 +162,33 @@ const AllTests = () => {
           ListFooterComponent={renderFooter}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          renderItem={({ item }) => (
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.code}>{item.code}</Text>
-                <Text style={styles.category}>{item.category}</Text>
-                <Text style={styles.price}>Rs {item.price.toLocaleString()}</Text>
+          renderItem={({ item }) => {
+            const isBooked = bookedTests.includes(item.id);
+            const discountedPrice = item.price * 0.8; // 20% discount
+
+            return (
+              <View style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title}>{item.name}</Text>
+                  <Text style={styles.code}>{item.code}</Text>
+                  <Text style={styles.category}>{item.category}</Text>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.originalPrice}>Rs {item.price.toLocaleString()}</Text>
+                    <Text style={styles.discountedPrice}>Rs {Math.round(discountedPrice).toLocaleString()}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.bookBtn, isBooked && styles.cancelBtn]}
+                  onPress={() => handleBookPress(item)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.bookText, isBooked && styles.cancelText]}>
+                    {isBooked ? 'Cancel' : 'Book'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.bookBtn}
-                onPress={() => console.log("Book test:", item.name)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.bookText}>Book</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            );
+          }}
         />
       )}
 

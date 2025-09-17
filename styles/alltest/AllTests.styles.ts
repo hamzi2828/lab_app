@@ -101,4 +101,27 @@ export const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
   },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  originalPrice: {
+    fontSize: 11,
+    color: "#888",
+    textDecorationLine: "line-through",
+    marginRight: 6,
+  },
+  discountedPrice: {
+    fontSize: 12,
+    color: "#0d9b1e",
+    fontWeight: "700",
+  },
+  cancelBtn: {
+    backgroundColor: "#0d9b1e",
+    borderColor: "#0d9b1e",
+  },
+  cancelText: {
+    color: "#fff",
+  },
 });

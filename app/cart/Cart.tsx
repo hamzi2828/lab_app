@@ -7,15 +7,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import CartItem from "./CartItem";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/cart/Cart.styles";
 import { getTestImage } from "../../services/testsService";
+import { cartService, CartTest } from "../../services/cartService";
 
 const Cart = () => {
-  const [bookedTests, setBookedTests] = useState<any[]>([]);
+  const [bookedTests, setBookedTests] = useState<CartTest[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -34,11 +34,8 @@ const Cart = () => {
 
   const loadBookedTests = async () => {
     try {
-      const stored = await AsyncStorage.getItem('bookedTestsDetails');
-      if (stored) {
-        const tests = JSON.parse(stored);
-        setBookedTests(tests);
-      }
+      const cartItems = await cartService.getCartItems();
+      setBookedTests(cartItems);
     } catch (error) {
       console.error('Error loading booked tests:', error);
     } finally {
@@ -48,20 +45,25 @@ const Cart = () => {
 
   const removeFromCart = async (testId: number) => {
     try {
-      const updatedTests = bookedTests.filter(test => test.id !== testId);
-      setBookedTests(updatedTests);
-      await AsyncStorage.setItem('bookedTestsDetails', JSON.stringify(updatedTests));
+      await cartService.removeFromCart(testId);
+      // Reload cart items after removal
+      const updatedItems = await cartService.getCartItems();
+      setBookedTests(updatedItems);
     } catch (error) {
       console.error('Error removing test from cart:', error);
     }
   };
 
-  const calculateTotal = () => {
-    return bookedTests.reduce((total, test) => {
-      const price = parseFloat(test.discountedPrice?.replace(/[^\d.]/g, '') || test.price || 0);
-      return total + price;
-    }, 0);
+  const [cartTotal, setCartTotal] = useState(0);
+
+  const loadCartTotal = async () => {
+    const total = await cartService.getCartTotal();
+    setCartTotal(total);
   };
+
+  useEffect(() => {
+    loadCartTotal();
+  }, [bookedTests]);
 
 
   if (loading) {
@@ -104,7 +106,7 @@ const Cart = () => {
             onRemove={() => removeFromCart(item.id)}
           />
         )}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => `test-${item.id}`}
         contentContainerStyle={styles.flatListContainer}
       />
       <View style={styles.footer}>
@@ -116,11 +118,11 @@ const Cart = () => {
         </View>
         <View style={styles.orderSummary}>
           <Text style={styles.summaryText}>Subtotals</Text>
-          <Text style={styles.summaryText}>Rs.{calculateTotal().toFixed(2)}</Text>
+          <Text style={styles.summaryText}>Rs.{cartTotal.toFixed(2)}</Text>
         </View>
         <View style={styles.orderSummary}>
           <Text style={[styles.summaryText, styles.totalText]}>Totals</Text>
-          <Text style={[styles.summaryText, styles.totalText]}>Rs.{(calculateTotal() + 8).toFixed(2)}</Text>
+          <Text style={[styles.summaryText, styles.totalText]}>Rs.{(cartTotal + 8).toFixed(2)}</Text>
         </View>
         <View style={styles.actionBar}>
           <TouchableOpacity

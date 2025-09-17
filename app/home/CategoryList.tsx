@@ -23,7 +23,7 @@ const categories = [
 ];
 
 const CategoryList = () => {
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: any }) => (
     <View style={styles.itemContainer}>
       <View style={styles.imageContainer}>
         <Image source={item.image} style={styles.image} />

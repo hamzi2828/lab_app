@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   ImageSourcePropType,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import { BRAND_GREEN } from "../constants/Colors";
+import { cartService } from "../services/cartService";
 
 
 export type ProductCardProps = {
@@ -44,11 +44,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const checkBookingStatus = async () => {
     try {
-      const bookedTests = await AsyncStorage.getItem('bookedTestsDetails');
-      if (bookedTests) {
-        const bookedTestsArray = JSON.parse(bookedTests);
-        setIsBooked(bookedTestsArray.some((test: any) => test.id === testId));
-      }
+      const isInCart = await cartService.isInCart(testId);
+      setIsBooked(isInCart);
     } catch (error) {
       console.error('Error checking booking status:', error);
     }
@@ -56,31 +53,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleBookPress = async () => {
     try {
-      const bookedTests = await AsyncStorage.getItem('bookedTestsDetails');
-      let bookedTestsArray = bookedTests ? JSON.parse(bookedTests) : [];
+      if (testData) {
+        const success = await cartService.toggleBooking(testData, originalPrice, discountedPrice, badges);
 
-      if (isBooked) {
-        // Cancel booking - remove from array
-        bookedTestsArray = bookedTestsArray.filter((test: any) => test.id !== testId);
-        setIsBooked(false);
-      } else {
-        // Book test - add complete test details to array
-        if (testData && !bookedTestsArray.some((test: any) => test.id === testId)) {
-          const testToAdd = {
-            ...testData,
-            originalPrice,
-            discountedPrice,
-            badges
-          };
-          bookedTestsArray.push(testToAdd);
+        if (success) {
+          setIsBooked(!isBooked);
+
+          if (onBookPress) {
+            onBookPress();
+          }
         }
-        setIsBooked(true);
-      }
-
-      await AsyncStorage.setItem('bookedTestsDetails', JSON.stringify(bookedTestsArray));
-
-      if (onBookPress) {
-        onBookPress();
       }
     } catch (error) {
       console.error('Error updating booking status:', error);

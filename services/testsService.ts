@@ -1,6 +1,6 @@
 
 export interface Test {
-  id: number;
+  id: number | string; // Handle both string and number IDs from different APIs
   name: string;
   code: string;
   price: number;
