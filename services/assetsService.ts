@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export interface Banner {
   id: number;
   banner_number: number;
@@ -31,36 +33,55 @@ const CACHE_KEY = 'app_assets_cache';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 class AssetsCache {
-  private cache: Map<string, CacheEntry> = new Map();
-
-  set(key: string, data: AssetsResponse): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now()
-    });
+  async set(key: string, data: AssetsResponse): Promise<void> {
+    try {
+      const cacheEntry: CacheEntry = {
+        data,
+        timestamp: Date.now()
+      };
+      await AsyncStorage.setItem(key, JSON.stringify(cacheEntry));
+    } catch (error) {
+      // Silent error for caching
+    }
   }
 
-  get(key: string): AssetsResponse | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
+  async get(key: string): Promise<AssetsResponse | null> {
+    try {
+      const cachedData = await AsyncStorage.getItem(key);
+      if (!cachedData) return null;
 
-    const isExpired = Date.now() - entry.timestamp > CACHE_DURATION;
-    if (isExpired) {
-      this.cache.delete(key);
+      const entry: CacheEntry = JSON.parse(cachedData);
+      const isExpired = Date.now() - entry.timestamp > CACHE_DURATION;
+
+      if (isExpired) {
+        await AsyncStorage.removeItem(key);
+        return null;
+      }
+
+      return entry.data;
+    } catch (error) {
       return null;
     }
-
-    return entry.data;
   }
 
-  clear(): void {
-    this.cache.clear();
+  async clear(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(CACHE_KEY);
+    } catch (error) {
+      // Silent error for cache clearing
+    }
   }
 
-  isExpired(key: string): boolean {
-    const entry = this.cache.get(key);
-    if (!entry) return true;
-    return Date.now() - entry.timestamp > CACHE_DURATION;
+  async isExpired(key: string): Promise<boolean> {
+    try {
+      const cachedData = await AsyncStorage.getItem(key);
+      if (!cachedData) return true;
+
+      const entry: CacheEntry = JSON.parse(cachedData);
+      return Date.now() - entry.timestamp > CACHE_DURATION;
+    } catch (error) {
+      return true;
+    }
   }
 }
 
@@ -69,14 +90,11 @@ const assetsCache = new AssetsCache();
 export const fetchAppHomeAssets = async (forceRefresh: boolean = false): Promise<AssetsResponse> => {
   try {
     if (!forceRefresh) {
-      const cachedData = assetsCache.get(CACHE_KEY);
+      const cachedData = await assetsCache.get(CACHE_KEY);
       if (cachedData) {
-        console.log('✅ Assets loaded from cache');
         return cachedData;
       }
     }
-
-    console.log('Fetching app home assets from API...');
 
     const response = await fetch(`${API_BASE_URL}/api/app-assets`, {
       method: 'GET',
@@ -86,10 +104,7 @@ export const fetchAppHomeAssets = async (forceRefresh: boolean = false): Promise
       },
     });
 
-    console.log('Assets API response status:', response.status);
-
     const responseText = await response.text();
-    console.log('Raw assets response:', responseText);
 
     if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
       if (responseText.includes('The action you have requested is not allowed')) {
@@ -102,11 +117,11 @@ export const fetchAppHomeAssets = async (forceRefresh: boolean = false): Promise
     try {
       result = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('Failed to parse assets response:', parseError);
+      // Parse error
       throw new Error('Invalid response from server');
     }
 
-    console.log('Parsed assets response:', result);
+    console.log('✅✅✅✅✅✅✅Full API Response:', JSON.stringify(result, null, 2));
 
     if (!response.ok) {
       throw new Error(result.message || `Failed to fetch assets: ${response.status}`);
@@ -116,28 +131,34 @@ export const fetchAppHomeAssets = async (forceRefresh: boolean = false): Promise
       throw new Error(result.message || 'Failed to fetch assets');
     }
 
-    assetsCache.set(CACHE_KEY, result);
-    console.log('✅ Assets loaded successfully and cached for 1 hour');
+    await assetsCache.set(CACHE_KEY, result);
 
     return result;
 
   } catch (error) {
-    console.error('❌ Assets API error:', error);
     throw error;
   }
 };
 
-export const clearAssetsCache = (): void => {
-  assetsCache.clear();
-  console.log('Assets cache cleared');
+export const clearAssetsCache = async (): Promise<void> => {
+  await assetsCache.clear();
 };
 
-export const isAssetsCacheExpired = (): boolean => {
-  return assetsCache.isExpired(CACHE_KEY);
+export const clearAllAsyncStorage = async (): Promise<void> => {
+  try {
+    await AsyncStorage.clear();
+    console.log('✅ All AsyncStorage data cleared successfully');
+  } catch (error) {
+    console.error('❌ Failed to clear AsyncStorage:', error);
+  }
 };
 
-export const getAssetsCacheStatus = (): { cached: boolean; expired: boolean } => {
-  const cached = assetsCache.get(CACHE_KEY) !== null;
-  const expired = assetsCache.isExpired(CACHE_KEY);
+export const isAssetsCacheExpired = async (): Promise<boolean> => {
+  return await assetsCache.isExpired(CACHE_KEY);
+};
+
+export const getAssetsCacheStatus = async (): Promise<{ cached: boolean; expired: boolean }> => {
+  const cached = (await assetsCache.get(CACHE_KEY)) !== null;
+  const expired = await assetsCache.isExpired(CACHE_KEY);
   return { cached, expired };
 };

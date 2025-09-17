@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons"; // Make sure to install @exp
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/profile/Profile.styles";
 import { getUserData, isUserLoggedIn, logoutUser } from "../../services/loginValidation";
+import { clearAllAsyncStorage } from "../../services/assetsService";
 
 const Profile = () => {
   const router = useRouter();
@@ -52,6 +53,32 @@ const Profile = () => {
             } catch (error) {
               console.error("Error during logout:", error);
               Alert.alert("Error", "Failed to sign out. Please try again.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleClearStorage = () => {
+    Alert.alert(
+      "Clear Storage",
+      "Are you sure you want to clear all cached data? This will remove all stored app data.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllAsyncStorage();
+              Alert.alert("Success", "Storage cleared successfully!");
+            } catch (error) {
+              console.error("Error clearing storage:", error);
+              Alert.alert("Error", "Failed to clear storage. Please try again.");
             }
           }
         }
@@ -109,6 +136,12 @@ const Profile = () => {
       <TouchableOpacity style={styles.option}>
         <Text style={styles.optionText}>Support</Text>
         <MaterialIcons name="keyboard-arrow-right" size={24} color="#777" />
+      </TouchableOpacity>
+
+      {/* Clear Storage Button */}
+      <TouchableOpacity style={styles.option} onPress={handleClearStorage}>
+        <Text style={[styles.optionText, { color: '#ff4444' }]}>Clear Storage</Text>
+        <MaterialIcons name="delete-outline" size={24} color="#ff4444" />
       </TouchableOpacity>
 
       {/* Sign Out Button */}

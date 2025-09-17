@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { getUserData, isUserLoggedIn, logoutUser } from "../../services/loginValidation";
+import { fetchAppHomeAssets, AppAssets } from "../../services/assetsService";
 
 type RootStackParamList = {
   'auth/LoginScreen': undefined;
@@ -24,9 +25,11 @@ const Header = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string>("");
+  const [assets, setAssets] = useState<AppAssets | null>(null);
 
   useEffect(() => {
     checkLoginStatus();
+    loadAssets();
     const unsubscribe = navigation.addListener('focus', () => {
       checkLoginStatus();
     });
@@ -51,6 +54,17 @@ const Header = () => {
     }
   };
 
+  const loadAssets = async () => {
+    try {
+      const response = await fetchAppHomeAssets();
+      if (response.success) {
+        setAssets(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading assets:", error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -68,10 +82,16 @@ const Header = () => {
 
       {/* Logo aligned to the left */}
       <Image
-        source={require("../../assets/images/citilab_logo.jpg")}
-        resizeMode="contain"
-        style={styles.logo}
-      />
+          source={assets?.logo?.logo_url ? { uri: assets.logo.logo_url } : { uri: '' }}
+          resizeMode="contain"
+          style={[
+            styles.logo,
+            !assets?.logo?.logo_url && { width: 0, height: 0 }
+          ]}
+          onError={(e) => {
+            console.log('Failed to load logo:', assets?.logo?.logo_url, e.nativeEvent.error);
+          }}
+        />
 
       {/* Icons */}
       <View style={styles.iconsContainer}>
