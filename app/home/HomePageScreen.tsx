@@ -9,7 +9,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import Header from "../common/Header";
-import HomeSlider from "./HomeSlider";
+import HomeSlider from "../../components/HomeSlider";
 import DealOfTheDay from "./DealOfTheDay";
 import ProductCardHome from "../../components/ProductHome";
 import QuickActions from "../../components/QuickActions";

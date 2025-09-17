@@ -1,30 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, StyleSheet, Image, ActivityIndicator } from "react-native";
 import Swiper from "react-native-swiper";
-import { fetchAppHomeAssets } from "../../services/testsService";
+import { fetchAppHomeAssets, Banner, AppAssets } from "../services/assetsService";
 import { useFocusEffect } from "@react-navigation/native";
 
-interface Banner {
-  id: number;
-  banner_number: number;
-  image_url: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AppAssets {
-  logo: {
-    logo_url: string | null;
-    created_at: string | null;
-    updated_at: string | null;
-  };
-  banners: Banner[];
-}
 
 const HomeSlider = () => {
   const [assets, setAssets] = useState<AppAssets | null>(null);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
     loadHomeAssets();
@@ -38,28 +21,20 @@ const HomeSlider = () => {
     }, [])
   );
 
-  const loadHomeAssets = async () => {
+  const loadHomeAssets = async (forceRefresh: boolean = false) => {
     try {
       setLoading(true);
-      const response = await fetchAppHomeAssets();
+      const response = await fetchAppHomeAssets(forceRefresh);
 
       if (response.success) {
         setAssets(response.data);
-        setUsingFallback(false);
       }
     } catch (err: any) {
       console.error('Unexpected error in loadHomeAssets:', err);
-      // This should not happen since the service handles all errors
     } finally {
       setLoading(false);
     }
   };
-
-  // Fallback to local images if no banners are available from API
-  const fallbackBanners = [
-    require("../../assets/images/homesliderimg1.jpg"),
-    require("../../assets/images/homesliderimg2.jpg")
-  ];
 
   if (loading) {
     return (
@@ -69,37 +44,25 @@ const HomeSlider = () => {
     );
   }
 
-  // Use API banners if available, otherwise use fallback
-  const bannersToShow = (assets?.banners && assets.banners.length > 0)
-    ? assets.banners 
-    : fallbackBanners.map((_, index) => ({
-        id: index,
-        image_url: '',
-        banner_number: index,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        isFallback: true
-      } as Banner));
+  if (!assets?.banners || assets.banners.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.sliderContainer}>
       <Swiper
         autoplay
-        autoplayTimeout={5000} // 5 seconds
+        autoplayTimeout={5000}
         showsPagination
         dotStyle={styles.dotStyle}
         activeDotStyle={styles.activeDotStyle}
         paginationStyle={styles.paginationStyle}
         loop
       >
-        {bannersToShow.map((banner) => (
+        {assets.banners.map((banner) => (
           <View key={banner.id} style={styles.slide}>
             <Image
-              source={
-                banner.image_url 
-                  ? { uri: banner.image_url } 
-                  : fallbackBanners[banner.id % fallbackBanners.length]
-              }
+              source={{ uri: banner.image_url }}
               style={styles.image}
               resizeMode="cover"
               onError={(e) => {
