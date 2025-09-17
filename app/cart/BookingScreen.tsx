@@ -14,31 +14,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Location from "expo-location";
 import { styles } from "../../styles/cart/BookingScreen.styles";
+import bookingService, { BookingData, Address, DateItem } from "../../services/bookingService";
 
-// Define the date type
-interface DateItem {
-  day: string;
-  date: number;
-  month: string;
-  id: number;
-  fullDate: string;
-  isToday: boolean;
-}
-
-// Define the address type
-interface Address {
-  id: string;
-  type: string; // Custom address type entered by user
-  completeAddress: string;
-  isDefault?: boolean;
-}
 
 const BookingScreen = () => {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState<number>(1); // Default to first date
+  const [selectedDate, setSelectedDate] = useState<number>(1);
   const [selectedTime, setSelectedTime] = useState<string>("10:00 AM - 11:00 AM");
   const [address, setAddress] = useState<string>("");
   const [days, setDays] = useState<DateItem[]>([]);
@@ -51,176 +33,130 @@ const BookingScreen = () => {
     completeAddress: "",
   });
   const [locationLoading, setLocationLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [bookedTests, setBookedTests] = useState<any[]>([]);
 
-  // Generate time slots for 24 hours
-  const timeSlots = [
-    "12:00 AM - 1:00 AM",
-    "1:00 AM - 2:00 AM",
-    "2:00 AM - 3:00 AM",
-    "3:00 AM - 4:00 AM",
-    "4:00 AM - 5:00 AM",
-    "5:00 AM - 6:00 AM",
-    "6:00 AM - 7:00 AM",
-    "7:00 AM - 8:00 AM",
-    "8:00 AM - 9:00 AM",
-    "9:00 AM - 10:00 AM",
-    "10:00 AM - 11:00 AM",
-    "11:00 AM - 12:00 PM",
-    "12:00 PM - 1:00 PM",
-    "1:00 PM - 2:00 PM",
-    "2:00 PM - 3:00 PM",
-    "3:00 PM - 4:00 PM",
-    "4:00 PM - 5:00 PM",
-    "5:00 PM - 6:00 PM",
-    "6:00 PM - 7:00 PM",
-    "7:00 PM - 8:00 PM",
-    "8:00 PM - 9:00 PM",
-    "9:00 PM - 10:00 PM",
-    "10:00 PM - 11:00 PM",
-    "11:00 PM - 12:00 AM",
-  ];
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
 
-  // Generate 30 days starting from today
-  const generate30Days = (): DateItem[] => {
-    const dates: DateItem[] = [];
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const today = new Date();
-
-    for (let i = 0; i < 30; i++) {
-      const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() + i);
-
-      dates.push({
-        day: dayNames[currentDate.getDay()],
-        date: currentDate.getDate(),
-        month: monthNames[currentDate.getMonth()],
-        id: i + 1,
-        fullDate: currentDate.toDateString(),
-        isToday: i === 0,
-      });
-    }
-    return dates;
-  };
-
-  // Initialize with 30 days starting from today and load addresses
+  // Initialize booking data
   React.useEffect(() => {
-    const thirtyDays = generate30Days();
-    setDays(thirtyDays);
-    loadSavedAddresses();
-    addDummyAddresses();
+    initializeData();
   }, []);
 
-  // Add dummy addresses for demonstration
-  const addDummyAddresses = async () => {
+  const initializeData = async () => {
     try {
-      const dummyAddresses: Address[] = [
-        {
-          id: "dummy1",
-          type: "Home",
-          completeAddress: "House No. 123, Street 45, Sector F-11/4, Islamabad, Pakistan 44000",
-          isDefault: true,
-        },
-        {
-          id: "dummy2",
-          type: "Office",
-          completeAddress: "Office Suite 205, 2nd Floor, Plaza Tower, Blue Area, G-8 Markaz, Islamabad, Pakistan 44000",
-          isDefault: false,
-        },
-        {
-          id: "dummy3",
-          type: "Parents House",
-          completeAddress: "Villa No. 78, Block B, PWD Housing Society, Rawalpindi, Pakistan 46000",
-          isDefault: false,
-        }
-      ];
+      const data = await bookingService.initializeBookingData();
+      setDays(data.dates);
+      setTimeSlots(data.timeSlots);
+      setSelectedDate(data.defaultDate);
+      setSelectedTime(data.defaultTime);
+      setSavedAddresses(data.addresses);
+      setBookedTests(data.bookedTests);
 
-      const stored = await AsyncStorage.getItem('savedAddresses');
-      if (!stored || JSON.parse(stored).length === 0) {
-        await AsyncStorage.setItem('savedAddresses', JSON.stringify(dummyAddresses));
-        setSavedAddresses(dummyAddresses);
-        setSelectedAddress(dummyAddresses[0]);
-        setAddress(dummyAddresses[0].completeAddress);
+      if (data.defaultAddress) {
+        setSelectedAddress(data.defaultAddress);
+        setAddress(data.defaultAddress.completeAddress);
       }
     } catch (error) {
-      console.error('Error adding dummy addresses:', error);
-    }
-  };
-
-  // Load saved addresses from AsyncStorage
-  const loadSavedAddresses = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('savedAddresses');
-      if (stored) {
-        const addresses = JSON.parse(stored);
-        setSavedAddresses(addresses);
-        // Set the default address if available
-        const defaultAddr = addresses.find((addr: Address) => addr.isDefault);
-        if (defaultAddr) {
-          setSelectedAddress(defaultAddr);
-          setAddress(defaultAddr.completeAddress);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading addresses:', error);
+      console.error('Error initializing data:', error);
     }
   };
 
   // Save new address
   const saveNewAddress = async () => {
-    if (!newAddress.type || !newAddress.completeAddress) {
-      Alert.alert('Error', 'Please fill in all address fields');
-      return;
-    }
-
-    try {
-      const addressToSave: Address = {
-        id: Date.now().toString(),
-        type: newAddress.type,
-        completeAddress: newAddress.completeAddress,
-        isDefault: savedAddresses.length === 0,
-      };
-
-      const updatedAddresses = [...savedAddresses, addressToSave];
-      await AsyncStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-      setSavedAddresses(updatedAddresses);
-      setSelectedAddress(addressToSave);
-      setAddress(addressToSave.completeAddress);
-      setShowNewAddressForm(false);
-      setShowAddressModal(false);
-      setNewAddress({ type: "", completeAddress: "" });
-    } catch (error) {
-      console.error('Error saving address:', error);
-      Alert.alert('Error', 'Failed to save address');
-    }
+    await bookingService.handleNewAddressSubmission(
+      newAddress,
+      setSavedAddresses,
+      setSelectedAddress,
+      setAddress,
+      setShowNewAddressForm,
+      setShowAddressModal,
+      setNewAddress,
+      (message) => Alert.alert('Error', message)
+    );
   };
 
   // Delete an address
   const deleteAddress = async (addressId: string) => {
-    try {
-      const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressId);
-      await AsyncStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-      setSavedAddresses(updatedAddresses);
-      if (selectedAddress?.id === addressId) {
-        setSelectedAddress(null);
-        setAddress("");
-      }
-    } catch (error) {
-      console.error('Error deleting address:', error);
-    }
+    await bookingService.handleAddressDeletion(
+      addressId,
+      selectedAddress,
+      setSavedAddresses,
+      setSelectedAddress,
+      setAddress,
+      (message) => Alert.alert('Error', message)
+    );
   };
 
   // Select an address
   const selectAddress = (addr: Address) => {
-    setSelectedAddress(addr);
-    setAddress(addr.completeAddress);
-    setShowAddressModal(false);
+    bookingService.selectAddress(addr, setSelectedAddress, setAddress, setShowAddressModal);
   };
 
-  // Handle navigation to the next screen
-  const handleNext = () => {
-    // Save booking details to AsyncStorage or pass as params
-    router.push("/profile/ChangePaymentMethods" as any);
+  // Check if submit button should be enabled
+  const isSubmitEnabled = (): boolean => {
+    return bookingService.isSubmitEnabled({
+      selectedDate,
+      selectedTime,
+      selectedAddress,
+      address,
+      bookedTests,
+    });
+  };
+
+  // Handle booking submission
+  const handleSubmit = async () => {
+    setSubmitting(true);
+
+    await bookingService.handleCompleteBookingSubmission(
+      selectedDate,
+      selectedTime,
+      address,
+      selectedAddress,
+      bookedTests,
+      // On success
+      (bookingId) => {
+        setSubmitting(false);
+        Alert.alert(
+          'Booking Successful!',
+          `Your booking has been submitted successfully. Booking ID: ${bookingId}`,
+          [
+            {
+              text: 'OK',
+              onPress: () => router.push('/home/HomePageScreen'),
+            }
+          ]
+        );
+      },
+      // On login required
+      () => {
+        setSubmitting(false);
+        Alert.alert(
+          'Login Required',
+          'Please login to complete your booking. Your booking details will be saved.',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Login',
+              onPress: () => router.push('/auth/LoginScreen'),
+            }
+          ]
+        );
+      },
+      // On error
+      (message) => {
+        setSubmitting(false);
+        Alert.alert('Booking Failed', message);
+      },
+      // On validation error
+      (message) => {
+        setSubmitting(false);
+        Alert.alert('Incomplete Information', message);
+      }
+    );
   };
 
   // Handle navigation back
@@ -235,44 +171,12 @@ const BookingScreen = () => {
 
   // Get current location
   const getCurrentLocation = async () => {
-    try {
-      setLocationLoading(true);
-
-      // Request permission
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Permission to access location was denied');
-        setLocationLoading(false);
-        return;
-      }
-
-      // Get current position
-      let location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      // Reverse geocode to get address
-      let reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        const fullAddress = `${address.name || ''} ${address.street || ''} ${address.city || ''} ${address.region || ''} ${address.country || ''} ${address.postalCode || ''}`.trim();
-
-        // Update the new address form with the location
-        setNewAddress({
-          ...newAddress,
-          completeAddress: fullAddress || `Lat: ${location.coords.latitude}, Lon: ${location.coords.longitude}`,
-        });
-      }
-    } catch (error) {
-      console.error('Error getting location:', error);
-      Alert.alert('Error', 'Failed to get your current location');
-    } finally {
-      setLocationLoading(false);
-    }
+    await bookingService.handleLocationFetch(
+      newAddress,
+      setNewAddress,
+      setLocationLoading,
+      (message) => Alert.alert('Location Error', message)
+    );
   };
 
   return (
@@ -407,9 +311,28 @@ const BookingScreen = () => {
           )}
         </View>
 
-        {/* Next Button */}
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Next</Text>
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            isSubmitEnabled() ? styles.submitButtonEnabled : styles.submitButtonDisabled
+          ]}
+          onPress={handleSubmit}
+          disabled={!isSubmitEnabled() || submitting}
+        >
+          {submitting ? (
+            <View style={styles.submitButtonContent}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.submitButtonText}>Submitting...</Text>
+            </View>
+          ) : (
+            <Text style={[
+              styles.submitButtonText,
+              !isSubmitEnabled() && styles.submitButtonTextDisabled
+            ]}>
+              Submit Booking
+            </Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
 

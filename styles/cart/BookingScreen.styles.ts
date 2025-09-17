@@ -424,8 +424,7 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  nextButton: {
-    backgroundColor: BRAND_GREEN,
+  submitButton: {
     margin: 15,
     borderRadius: 25,
     paddingVertical: 15,
@@ -438,9 +437,23 @@ export const styles = StyleSheet.create({
     marginBottom: 30,
     marginTop: 10,
   },
-  nextButtonText: {
+  submitButtonEnabled: {
+    backgroundColor: BRAND_GREEN,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#cccccc",
+  },
+  submitButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  submitButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  submitButtonTextDisabled: {
+    color: "#999999",
   },
 });

@@ -1,0 +1,690 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
+import * as Location from 'expo-location';
+
+// Date and time interfaces
+export interface DateItem {
+  day: string;
+  date: number;
+  month: string;
+  id: number;
+  fullDate: string;
+  isToday: boolean;
+}
+
+// Address interfaces
+export interface Address {
+  id: string;
+  type: string;
+  completeAddress: string;
+  isDefault?: boolean;
+}
+
+// Location interfaces
+export interface LocationData {
+  latitude: number;
+  longitude: number;
+  address?: string;
+}
+
+// Booking interfaces
+export interface BookingData {
+  selectedDate: number;
+  selectedTime: string;
+  address: string;
+  selectedAddress: Address | null;
+  bookedTests: any[];
+}
+
+export interface UserSession {
+  isLoggedIn: boolean;
+  token?: string;
+  userId?: string;
+  userEmail?: string;
+}
+
+class BookingService {
+  private readonly dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  private readonly monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  // Date and time generation methods
+  generateDates(numberOfDays: number = 30): DateItem[] {
+    const dates: DateItem[] = [];
+    const today = new Date();
+
+    for (let i = 0; i < numberOfDays; i++) {
+      const currentDate = new Date(today);
+      currentDate.setDate(today.getDate() + i);
+
+      dates.push({
+        day: this.dayNames[currentDate.getDay()],
+        date: currentDate.getDate(),
+        month: this.monthNames[currentDate.getMonth()],
+        id: i + 1,
+        fullDate: currentDate.toDateString(),
+        isToday: i === 0,
+      });
+    }
+
+    return dates;
+  }
+
+  getTimeSlots(): string[] {
+    return [
+      "12:00 AM - 1:00 AM",
+      "1:00 AM - 2:00 AM",
+      "2:00 AM - 3:00 AM",
+      "3:00 AM - 4:00 AM",
+      "4:00 AM - 5:00 AM",
+      "5:00 AM - 6:00 AM",
+      "6:00 AM - 7:00 AM",
+      "7:00 AM - 8:00 AM",
+      "8:00 AM - 9:00 AM",
+      "9:00 AM - 10:00 AM",
+      "10:00 AM - 11:00 AM",
+      "11:00 AM - 12:00 PM",
+      "12:00 PM - 1:00 PM",
+      "1:00 PM - 2:00 PM",
+      "2:00 PM - 3:00 PM",
+      "3:00 PM - 4:00 PM",
+      "4:00 PM - 5:00 PM",
+      "5:00 PM - 6:00 PM",
+      "6:00 PM - 7:00 PM",
+      "7:00 PM - 8:00 PM",
+      "8:00 PM - 9:00 PM",
+      "9:00 PM - 10:00 PM",
+      "10:00 PM - 11:00 PM",
+      "11:00 PM - 12:00 AM",
+    ];
+  }
+
+  getDefaultTimeSlot(): string {
+    return "10:00 AM - 11:00 AM";
+  }
+
+  getDefaultDate(): number {
+    return 1;
+  }
+
+  // Address management methods
+  async loadSavedAddresses(): Promise<Address[]> {
+    try {
+      const stored = await AsyncStorage.getItem('savedAddresses');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error loading addresses:', error);
+      return [];
+    }
+  }
+
+  async getDefaultAddress(): Promise<Address | null> {
+    try {
+      const addresses = await this.loadSavedAddresses();
+      return addresses.find(addr => addr.isDefault) || null;
+    } catch (error) {
+      console.error('Error getting default address:', error);
+      return null;
+    }
+  }
+
+  async saveAddress(addressData: { type: string; completeAddress: string }): Promise<{ success: boolean; address?: Address; message?: string }> {
+    if (!addressData.type || !addressData.completeAddress) {
+      return { success: false, message: 'Please fill in all address fields' };
+    }
+
+    try {
+      const existingAddresses = await this.loadSavedAddresses();
+
+      const newAddress: Address = {
+        id: Date.now().toString(),
+        type: addressData.type,
+        completeAddress: addressData.completeAddress,
+        isDefault: existingAddresses.length === 0,
+      };
+
+      const updatedAddresses = [...existingAddresses, newAddress];
+      await AsyncStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+
+      return { success: true, address: newAddress };
+    } catch (error) {
+      console.error('Error saving address:', error);
+      return { success: false, message: 'Failed to save address' };
+    }
+  }
+
+  async deleteAddress(addressId: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const addresses = await this.loadSavedAddresses();
+      const updatedAddresses = addresses.filter(addr => addr.id !== addressId);
+      await AsyncStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      return { success: false, message: 'Failed to delete address' };
+    }
+  }
+
+  async addDummyAddresses(): Promise<Address[]> {
+    try {
+      const existingAddresses = await this.loadSavedAddresses();
+
+      if (existingAddresses.length > 0) {
+        return existingAddresses;
+      }
+
+      const dummyAddresses: Address[] = [
+        {
+          id: "dummy1",
+          type: "Home",
+          completeAddress: "House No. 123, Street 45, Sector F-11/4, Islamabad, Pakistan 44000",
+          isDefault: true,
+        },
+        {
+          id: "dummy2",
+          type: "Office",
+          completeAddress: "Office Suite 205, 2nd Floor, Plaza Tower, Blue Area, G-8 Markaz, Islamabad, Pakistan 44000",
+          isDefault: false,
+        },
+        {
+          id: "dummy3",
+          type: "Parents House",
+          completeAddress: "Villa No. 78, Block B, PWD Housing Society, Rawalpindi, Pakistan 46000",
+          isDefault: false,
+        }
+      ];
+
+      await AsyncStorage.setItem('savedAddresses', JSON.stringify(dummyAddresses));
+      return dummyAddresses;
+    } catch (error) {
+      console.error('Error adding dummy addresses:', error);
+      return [];
+    }
+  }
+
+  // Location methods
+  async getCurrentLocationWithAddress(): Promise<{ success: boolean; location?: LocationData; message?: string }> {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        return {
+          success: false,
+          message: 'Location permission is required to get your current address automatically.'
+        };
+      }
+
+      // Create a timeout promise for better error handling
+      const locationPromise = Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Location request timed out')), 15000);
+      });
+
+      const location = await Promise.race([locationPromise, timeoutPromise]) as any;
+
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      let address = `Lat: ${location.coords.latitude}, Lon: ${location.coords.longitude}`;
+
+      if (reverseGeocode.length > 0) {
+        const addressData = reverseGeocode[0];
+        const addressParts = [
+          addressData.name,
+          addressData.street,
+          addressData.city,
+          addressData.region,
+          addressData.country,
+          addressData.postalCode
+        ].filter(part => part && part.trim());
+
+        if (addressParts.length > 0) {
+          address = addressParts.join(', ');
+        }
+      }
+
+      return {
+        success: true,
+        location: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          address: address
+        }
+      };
+    } catch (error) {
+      console.error('Error getting current location with address:', error);
+      return {
+        success: false,
+        message: 'Failed to get your current location. Please check if location services are enabled.'
+      };
+    }
+  }
+
+  // Initialize booking data
+  async initializeBookingData(): Promise<{
+    dates: DateItem[];
+    timeSlots: string[];
+    defaultDate: number;
+    defaultTime: string;
+    addresses: Address[];
+    defaultAddress: Address | null;
+    bookedTests: any[];
+  }> {
+    try {
+      const dates = this.generateDates(30);
+      const timeSlots = this.getTimeSlots();
+      const defaultDate = this.getDefaultDate();
+      const defaultTime = this.getDefaultTimeSlot();
+
+      // Load or create dummy addresses
+      let addresses = await this.addDummyAddresses();
+      const defaultAddress = await this.getDefaultAddress();
+
+      // Load booked tests
+      const bookedTests = await this.loadBookedTests();
+
+      return {
+        dates,
+        timeSlots,
+        defaultDate,
+        defaultTime,
+        addresses,
+        defaultAddress,
+        bookedTests,
+      };
+    } catch (error) {
+      console.error('Error initializing booking data:', error);
+      return {
+        dates: [],
+        timeSlots: [],
+        defaultDate: 1,
+        defaultTime: "10:00 AM - 11:00 AM",
+        addresses: [],
+        defaultAddress: null,
+        bookedTests: [],
+      };
+    }
+  }
+
+  // Load booked tests from AsyncStorage
+  async loadBookedTests(): Promise<any[]> {
+    try {
+      const stored = await AsyncStorage.getItem('bookedTestsDetails');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error loading booked tests:', error);
+      return [];
+    }
+  }
+
+  // Address management methods
+  async loadAddresses(): Promise<Address[]> {
+    return await this.loadSavedAddresses();
+  }
+
+  async saveNewAddress(addressData: { type: string; completeAddress: string }): Promise<{ success: boolean; address?: Address; message?: string }> {
+    return await this.saveAddress(addressData);
+  }
+
+  // Location methods
+  async getCurrentLocation(): Promise<{ success: boolean; address?: string; message?: string }> {
+    try {
+      const result = await this.getCurrentLocationWithAddress();
+      if (result.success && result.location) {
+        return {
+          success: true,
+          address: result.location.address
+        };
+      }
+      return {
+        success: false,
+        message: result.message || 'Failed to get location'
+      };
+    } catch (error) {
+      console.error('Error getting current location:', error);
+      return {
+        success: false,
+        message: 'Failed to get your current location'
+      };
+    }
+  }
+
+  // Check if user is logged in
+  async checkUserSession(): Promise<UserSession> {
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const userId = await AsyncStorage.getItem('userId');
+      const userEmail = await AsyncStorage.getItem('userEmail');
+
+      if (userToken && userId) {
+        return {
+          isLoggedIn: true,
+          token: userToken,
+          userId: userId,
+          userEmail: userEmail || undefined,
+        };
+      }
+
+      return { isLoggedIn: false };
+    } catch (error) {
+      console.error('Error checking user session:', error);
+      return { isLoggedIn: false };
+    }
+  }
+
+  // Validate booking data
+  validateBookingData(bookingData: BookingData): { isValid: boolean; message?: string } {
+    if (!bookingData.selectedDate) {
+      return { isValid: false, message: 'Please select a date' };
+    }
+
+    if (!bookingData.selectedTime) {
+      return { isValid: false, message: 'Please select a time slot' };
+    }
+
+    if (!bookingData.selectedAddress || !bookingData.address) {
+      return { isValid: false, message: 'Please select a delivery address' };
+    }
+
+    if (!bookingData.bookedTests || bookingData.bookedTests.length === 0) {
+      return { isValid: false, message: 'No tests found in cart' };
+    }
+
+    return { isValid: true };
+  }
+
+  // Save booking data to storage
+  async saveBookingData(bookingData: BookingData): Promise<void> {
+    try {
+      await AsyncStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
+    } catch (error) {
+      console.error('Error saving booking data:', error);
+      throw new Error('Failed to save booking data');
+    }
+  }
+
+  // Get saved booking data
+  async getSavedBookingData(): Promise<BookingData | null> {
+    try {
+      const saved = await AsyncStorage.getItem('pendingBookingData');
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.error('Error getting saved booking data:', error);
+      return null;
+    }
+  }
+
+  // Clear saved booking data
+  async clearSavedBookingData(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem('pendingBookingData');
+    } catch (error) {
+      console.error('Error clearing booking data:', error);
+    }
+  }
+
+  // Submit booking to API
+  async submitBooking(bookingData: BookingData, userSession: UserSession): Promise<{ success: boolean; message: string; bookingId?: string }> {
+    try {
+      // Prepare booking payload
+      const bookingPayload = {
+        userId: userSession.userId,
+        selectedDate: bookingData.selectedDate,
+        selectedTime: bookingData.selectedTime,
+        deliveryAddress: {
+          type: bookingData.selectedAddress?.type,
+          completeAddress: bookingData.selectedAddress?.completeAddress,
+        },
+        tests: bookingData.bookedTests.map(test => ({
+          id: test.id,
+          name: test.name,
+          price: test.discountedPrice || test.price,
+        })),
+        totalAmount: this.calculateTotal(bookingData.bookedTests),
+        bookingDateTime: new Date().toISOString(),
+      };
+
+      // TODO: Replace with your actual API endpoint
+      const response = await fetch('YOUR_API_ENDPOINT/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userSession.token}`,
+        },
+        body: JSON.stringify(bookingPayload),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        // Clear cart and booking data after successful submission
+        await this.clearSavedBookingData();
+        await AsyncStorage.removeItem('bookedTestsDetails');
+
+        return {
+          success: true,
+          message: 'Booking submitted successfully!',
+          bookingId: result.bookingId,
+        };
+      } else {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: errorData.message || 'Failed to submit booking',
+        };
+      }
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      return {
+        success: false,
+        message: 'Network error. Please check your connection and try again.',
+      };
+    }
+  }
+
+  // Calculate total amount
+  private calculateTotal(bookedTests: any[]): number {
+    return bookedTests.reduce((total, test) => {
+      const price = parseFloat(test.discountedPrice?.replace(/[^\d.]/g, '') || test.price || 0);
+      return total + price;
+    }, 0);
+  }
+
+  // Check if booking data is valid for submission
+  isSubmitEnabled(bookingData: Partial<BookingData>): boolean {
+    return !!(
+      bookingData.selectedDate &&
+      bookingData.selectedTime &&
+      bookingData.selectedAddress &&
+      bookingData.address &&
+      bookingData.bookedTests &&
+      bookingData.bookedTests.length > 0
+    );
+  }
+
+  // Complete booking submission flow
+  async handleCompleteBookingSubmission(
+    selectedDate: number,
+    selectedTime: string,
+    address: string,
+    selectedAddress: Address | null,
+    bookedTests: any[],
+    onSuccess: (bookingId?: string) => void,
+    onLoginRequired: () => void,
+    onError: (message: string) => void,
+    onValidationError: (message: string) => void
+  ): Promise<void> {
+    try {
+      const bookingData: BookingData = {
+        selectedDate,
+        selectedTime,
+        address,
+        selectedAddress,
+        bookedTests,
+      };
+
+      // Validate booking data first
+      if (!this.isSubmitEnabled(bookingData)) {
+        onValidationError('Please fill in all required fields');
+        return;
+      }
+
+      // Proceed with submission
+      await this.handleBookingSubmission(bookingData, onSuccess, onLoginRequired, onError);
+    } catch (error) {
+      console.error('Error in complete booking submission:', error);
+      onError('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  // Main booking submission handler
+  async handleBookingSubmission(
+    bookingData: BookingData,
+    onSuccess: (bookingId?: string) => void,
+    onLoginRequired: () => void,
+    onError: (message: string) => void
+  ): Promise<void> {
+    try {
+      // Validate booking data
+      const validation = this.validateBookingData(bookingData);
+      if (!validation.isValid) {
+        onError(validation.message || 'Invalid booking data');
+        return;
+      }
+
+      // Check user session
+      const userSession = await this.checkUserSession();
+
+      if (!userSession.isLoggedIn) {
+        // Save booking data for after login
+        await this.saveBookingData(bookingData);
+        onLoginRequired();
+        return;
+      }
+
+      // Submit booking
+      const result = await this.submitBooking(bookingData, userSession);
+
+      if (result.success) {
+        onSuccess(result.bookingId);
+      } else {
+        onError(result.message);
+      }
+    } catch (error) {
+      console.error('Error in booking submission:', error);
+      onError('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  // Address selection logic
+  selectAddress(
+    address: Address,
+    setSelectedAddress: (addr: Address | null) => void,
+    setAddress: (addr: string) => void,
+    setShowModal: (show: boolean) => void
+  ): void {
+    setSelectedAddress(address);
+    setAddress(address.completeAddress);
+    setShowModal(false);
+  }
+
+  // Reset new address form
+  resetNewAddressForm(setNewAddress: (addr: Partial<Address>) => void): void {
+    setNewAddress({ type: "", completeAddress: "" });
+  }
+
+  // Handle new address form submission
+  async handleNewAddressSubmission(
+    newAddress: Partial<Address>,
+    setSavedAddresses: (addresses: Address[]) => void,
+    setSelectedAddress: (addr: Address | null) => void,
+    setAddress: (addr: string) => void,
+    setShowNewAddressForm: (show: boolean) => void,
+    setShowAddressModal: (show: boolean) => void,
+    setNewAddress: (addr: Partial<Address>) => void,
+    onError: (message: string) => void
+  ): Promise<void> {
+    const result = await this.saveNewAddress({
+      type: newAddress.type || "",
+      completeAddress: newAddress.completeAddress || ""
+    });
+
+    if (result.success && result.address) {
+      const updatedAddresses = await this.loadAddresses();
+      setSavedAddresses(updatedAddresses);
+      setSelectedAddress(result.address);
+      setAddress(result.address.completeAddress);
+      setShowNewAddressForm(false);
+      setShowAddressModal(false);
+      setNewAddress({ type: "", completeAddress: "" });
+    } else {
+      onError(result.message || 'Failed to save address');
+    }
+  }
+
+  // Handle address deletion
+  async handleAddressDeletion(
+    addressId: string,
+    selectedAddress: Address | null,
+    setSavedAddresses: (addresses: Address[]) => void,
+    setSelectedAddress: (addr: Address | null) => void,
+    setAddress: (addr: string) => void,
+    onError: (message: string) => void
+  ): Promise<void> {
+    const result = await this.deleteAddress(addressId);
+
+    if (result.success) {
+      const updatedAddresses = await this.loadAddresses();
+      setSavedAddresses(updatedAddresses);
+      if (selectedAddress?.id === addressId) {
+        setSelectedAddress(null);
+        setAddress("");
+      }
+    } else {
+      onError(result.message || 'Failed to delete address');
+    }
+  }
+
+  // Handle location fetching
+  async handleLocationFetch(
+    newAddress: Partial<Address>,
+    setNewAddress: (addr: Partial<Address>) => void,
+    setLocationLoading: (loading: boolean) => void,
+    onError: (message: string) => void
+  ): Promise<void> {
+    setLocationLoading(true);
+
+    try {
+      const result = await this.getCurrentLocation();
+
+      if (result.success && result.address) {
+        setNewAddress({
+          ...newAddress,
+          completeAddress: result.address,
+        });
+      } else {
+        onError(result.message || 'Failed to get your current location');
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      onError('Failed to get your current location');
+    } finally {
+      setLocationLoading(false);
+    }
+  }
+}
+
+export default new BookingService();
