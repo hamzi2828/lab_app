@@ -13,8 +13,7 @@ export default function RootLayout() {
       <Stack.Screen name="common/Notifications" />
       <Stack.Screen name="common/Filters" />
       <Stack.Screen name="cart/Cart" />
-      <Stack.Screen name="cart/NewAddress" />
-      <Stack.Screen name="cart/PaymentMethod" />
+      <Stack.Screen name="cart/BookingScreen" />
       {/* Profile Screens */}
       <Stack.Screen name="profile/Profile" />
       <Stack.Screen name="profile/Address" />
