@@ -26,9 +26,37 @@ interface DateItem {
 const BookingScreen = () => {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<number>(1); // Default to first date
-  const [selectedTime, setSelectedTime] = useState<string>("10:00 PM - 11:00 PM");
+  const [selectedTime, setSelectedTime] = useState<string>("10:00 AM - 11:00 AM");
   const [address, setAddress] = useState<string>("");
   const [days, setDays] = useState<DateItem[]>([]);
+
+  // Generate time slots for 24 hours
+  const timeSlots = [
+    "12:00 AM - 1:00 AM",
+    "1:00 AM - 2:00 AM",
+    "2:00 AM - 3:00 AM",
+    "3:00 AM - 4:00 AM",
+    "4:00 AM - 5:00 AM",
+    "5:00 AM - 6:00 AM",
+    "6:00 AM - 7:00 AM",
+    "7:00 AM - 8:00 AM",
+    "8:00 AM - 9:00 AM",
+    "9:00 AM - 10:00 AM",
+    "10:00 AM - 11:00 AM",
+    "11:00 AM - 12:00 PM",
+    "12:00 PM - 1:00 PM",
+    "1:00 PM - 2:00 PM",
+    "2:00 PM - 3:00 PM",
+    "3:00 PM - 4:00 PM",
+    "4:00 PM - 5:00 PM",
+    "5:00 PM - 6:00 PM",
+    "6:00 PM - 7:00 PM",
+    "7:00 PM - 8:00 PM",
+    "8:00 PM - 9:00 PM",
+    "9:00 PM - 10:00 PM",
+    "10:00 PM - 11:00 PM",
+    "11:00 PM - 12:00 AM",
+  ];
 
   // Generate 30 days starting from today
   const generate30Days = (): DateItem[] => {
@@ -153,9 +181,32 @@ const BookingScreen = () => {
           </ScrollView>
 
           {/* Time Selection */}
-          <TouchableOpacity style={styles.timeSelector}>
-            <Text style={styles.timeText}>{selectedTime}</Text>
-          </TouchableOpacity>
+          <Text style={styles.timeSectionLabel}>Select Time Slot</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.timeScrollView}
+          >
+            {timeSlots.map((slot, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.timeSlot,
+                  selectedTime === slot && styles.selectedTimeSlot,
+                ]}
+                onPress={() => setSelectedTime(slot)}
+              >
+                <Text
+                  style={[
+                    styles.timeSlotText,
+                    selectedTime === slot && styles.selectedTimeSlotText,
+                  ]}
+                >
+                  {slot}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         {/* Location */}
@@ -306,18 +357,37 @@ const styles = StyleSheet.create({
     color: BRAND_GREEN,
     fontWeight: "bold",
   },
-  timeSelector: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    alignSelf: "center",
-    minWidth: 180,
+  timeSectionLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+    marginTop: 10,
+    marginBottom: 10,
   },
-  timeText: {
-    fontSize: 16,
+  timeScrollView: {
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  timeSlot: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginRight: 10,
+    minWidth: 130,
+    alignItems: "center",
+  },
+  selectedTimeSlot: {
+    backgroundColor: BRAND_GREEN,
+  },
+  timeSlotText: {
+    fontSize: 13,
     color: "#333",
+    fontWeight: "500",
+  },
+  selectedTimeSlotText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   locationContainer: {
     backgroundColor: "#fff",
