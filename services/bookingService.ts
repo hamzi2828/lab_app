@@ -170,39 +170,20 @@ class BookingService {
     }
   }
 
-  async addDummyAddresses(): Promise<Address[]> {
+  async loadAddressesWithoutDefaults(): Promise<Address[]> {
     try {
-      const existingAddresses = await this.loadSavedAddresses();
+      // Load existing addresses and filter out any dummy addresses
+      const addresses = await this.loadSavedAddresses();
+      const cleanAddresses = addresses.filter(addr => !addr.id.startsWith('dummy'));
 
-      if (existingAddresses.length > 0) {
-        return existingAddresses;
+      // If we removed dummy addresses, save the cleaned list
+      if (cleanAddresses.length !== addresses.length) {
+        await AsyncStorage.setItem('savedAddresses', JSON.stringify(cleanAddresses));
       }
 
-      const dummyAddresses: Address[] = [
-        {
-          id: "dummy1",
-          type: "Home",
-          completeAddress: "House No. 123, Street 45, Sector F-11/4, Islamabad, Pakistan 44000",
-          isDefault: true,
-        },
-        {
-          id: "dummy2",
-          type: "Office",
-          completeAddress: "Office Suite 205, 2nd Floor, Plaza Tower, Blue Area, G-8 Markaz, Islamabad, Pakistan 44000",
-          isDefault: false,
-        },
-        {
-          id: "dummy3",
-          type: "Parents House",
-          completeAddress: "Villa No. 78, Block B, PWD Housing Society, Rawalpindi, Pakistan 46000",
-          isDefault: false,
-        }
-      ];
-
-      await AsyncStorage.setItem('savedAddresses', JSON.stringify(dummyAddresses));
-      return dummyAddresses;
+      return cleanAddresses;
     } catch (error) {
-      console.error('Error adding dummy addresses:', error);
+      console.error('Error loading addresses:', error);
       return [];
     }
   }
@@ -286,8 +267,8 @@ class BookingService {
       const defaultDate = this.getDefaultDate();
       const defaultTime = this.getDefaultTimeSlot();
 
-      // Load or create dummy addresses
-      let addresses = await this.addDummyAddresses();
+      // Load existing addresses (no dummy addresses)
+      let addresses = await this.loadAddressesWithoutDefaults();
       const defaultAddress = await this.getDefaultAddress();
 
       // Load booked tests
