@@ -5,10 +5,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Modal,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons"; // Ensure this package is installed
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import CartItem from "./CartItem";
@@ -17,7 +15,6 @@ import { styles } from "../../styles/cart/Cart.styles";
 import { getTestImage } from "../../services/testsService";
 
 const Cart = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [bookedTests, setBookedTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -66,19 +63,6 @@ const Cart = () => {
     }, 0);
   };
 
-  // Navigate to the checkout screen
-  const handleNavigate = () => {
-    setIsModalVisible(false); // Close the Modal first
-    setTimeout(() => {
-      return router.push("/cart/NewAddress");
-    }, 200);
-  };
-  const handleNavigatee = () => {
-    setIsModalVisible(false); // Close the Modal first
-    setTimeout(() => {
-      return router.push("/cart/PaymentMethod");
-    }, 200);
-  };
 
   if (loading) {
     return (
@@ -153,52 +137,6 @@ const Cart = () => {
           </TouchableOpacity>
         </View>
       </View>
-      {/* Modal for Address Selection */}
-      <Modal
-        visible={isModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {/* Close Button */}
-            <View style={styles.closeContainer}>
-              <Text style={styles.modalHeader}>Change Address</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.addressItem}>
-              <View>
-                <Text style={styles.addressType}>Home</Text>
-                <Text style={styles.addressName}>David Guetta</Text>
-                <Text style={styles.addressDetails}>
-                  2972 Westheimer Rd, Santa Ana, United Kingdom 85495
-                </Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addressItem}>
-              <View>
-                <Text style={styles.addressType}>Office</Text>
-                <Text style={styles.addressName}>Gotta Pawla</Text>
-                <Text style={styles.addressDetails}>
-                  2972 Westheimer Rd, Santa Ana, United Kingdom 85495
-                </Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleNavigate}>
-              <Text style={styles.addNewAddress}>+ Add New Address</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleNavigatee}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };

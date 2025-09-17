@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,13 @@ import {
   ScrollView,
   Image,
   StatusBar,
+  Modal,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Define the date type
 interface DateItem {
@@ -23,12 +26,28 @@ interface DateItem {
   isToday: boolean;
 }
 
+// Define the address type
+interface Address {
+  id: string;
+  type: string; // Custom address type entered by user
+  completeAddress: string;
+  isDefault?: boolean;
+}
+
 const BookingScreen = () => {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<number>(1); // Default to first date
   const [selectedTime, setSelectedTime] = useState<string>("10:00 AM - 11:00 AM");
   const [address, setAddress] = useState<string>("");
   const [days, setDays] = useState<DateItem[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [newAddress, setNewAddress] = useState<Partial<Address>>({
+    type: "",
+    completeAddress: "",
+  });
 
   // Generate time slots for 24 hours
   const timeSlots = [
@@ -81,11 +100,82 @@ const BookingScreen = () => {
     return dates;
   };
 
-  // Initialize with 30 days starting from today
+  // Initialize with 30 days starting from today and load addresses
   React.useEffect(() => {
     const thirtyDays = generate30Days();
     setDays(thirtyDays);
+    loadSavedAddresses();
   }, []);
+
+  // Load saved addresses from AsyncStorage
+  const loadSavedAddresses = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('savedAddresses');
+      if (stored) {
+        const addresses = JSON.parse(stored);
+        setSavedAddresses(addresses);
+        // Set the default address if available
+        const defaultAddr = addresses.find((addr: Address) => addr.isDefault);
+        if (defaultAddr) {
+          setSelectedAddress(defaultAddr);
+          setAddress(defaultAddr.completeAddress);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading addresses:', error);
+    }
+  };
+
+  // Save new address
+  const saveNewAddress = async () => {
+    if (!newAddress.type || !newAddress.completeAddress) {
+      Alert.alert('Error', 'Please fill in all address fields');
+      return;
+    }
+
+    try {
+      const addressToSave: Address = {
+        id: Date.now().toString(),
+        type: newAddress.type,
+        completeAddress: newAddress.completeAddress,
+        isDefault: savedAddresses.length === 0,
+      };
+
+      const updatedAddresses = [...savedAddresses, addressToSave];
+      await AsyncStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+      setSavedAddresses(updatedAddresses);
+      setSelectedAddress(addressToSave);
+      setAddress(addressToSave.completeAddress);
+      setShowNewAddressForm(false);
+      setShowAddressModal(false);
+      setNewAddress({ type: "", completeAddress: "" });
+    } catch (error) {
+      console.error('Error saving address:', error);
+      Alert.alert('Error', 'Failed to save address');
+    }
+  };
+
+  // Delete an address
+  const deleteAddress = async (addressId: string) => {
+    try {
+      const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressId);
+      await AsyncStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+      setSavedAddresses(updatedAddresses);
+      if (selectedAddress?.id === addressId) {
+        setSelectedAddress(null);
+        setAddress("");
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error);
+    }
+  };
+
+  // Select an address
+  const selectAddress = (addr: Address) => {
+    setSelectedAddress(addr);
+    setAddress(addr.completeAddress);
+    setShowAddressModal(false);
+  };
 
   // Handle navigation to the next screen
   const handleNext = () => {
@@ -100,8 +190,7 @@ const BookingScreen = () => {
 
   // Handle edit location
   const handleEditLocation = () => {
-    // Implement location editing functionality
-    console.log("Edit location pressed");
+    setShowAddressModal(true);
   };
 
   return (
@@ -209,37 +298,31 @@ const BookingScreen = () => {
           </ScrollView>
         </View>
 
-        {/* Location */}
-        <View style={styles.locationContainer}>
-          <View style={styles.locationHeader}>
-            <Text style={styles.locationTitle}>Booking Location</Text>
+
+        {/* Address Selection */}
+        <View style={styles.addressContainer}>
+          <View style={styles.addressHeader}>
+            <Text style={styles.addressTitle}>Delivery Address / ڈیلیوری ایڈریس</Text>
             <TouchableOpacity onPress={handleEditLocation}>
-              <Text style={styles.editText}>Edit Location <Ionicons name="pencil-outline" size={16} color={BRAND_GREEN} /></Text>
+              <Text style={styles.changeAddressText}>
+                {selectedAddress ? 'Change' : 'Select'} <Ionicons name="chevron-forward" size={16} color={BRAND_GREEN} />
+              </Text>
             </TouchableOpacity>
           </View>
-          
-          {/* Map Preview */}
-          <View style={styles.mapContainer}>
-            <View style={styles.mapImage}>
-              <Ionicons name="map-outline" size={80} color="#ccc" style={{alignSelf: 'center', marginTop: 30}} />
-            </View>
-            <View style={styles.mapPin}>
-              <Ionicons name="location" size={24} color="#fff" />
-            </View>
-            <Text style={styles.locationName}>Rawalpindi</Text>
-            <Text style={styles.mapLogo}>Maps</Text>
-          </View>
-        </View>
 
-        {/* Address Input */}
-        <View style={styles.addressContainer}>
-          <Text style={styles.addressTitle}>Enter Complete Address / مکمل پتہ درج کریں</Text>
-          <TextInput
-            style={styles.addressInput}
-            placeholder="Enter Address / پتہ درج کریں"
-            value={address}
-            onChangeText={setAddress}
-          />
+          {selectedAddress ? (
+            <View style={styles.selectedAddressCard}>
+              <View style={styles.addressTypeTag}>
+                <Text style={styles.addressTypeText}>{selectedAddress.type}</Text>
+              </View>
+              <Text style={styles.selectedAddressDetails}>{selectedAddress.completeAddress}</Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.selectAddressPrompt} onPress={handleEditLocation}>
+              <Ionicons name="location-outline" size={24} color={BRAND_GREEN} />
+              <Text style={styles.selectAddressPromptText}>Tap to select delivery address</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Next Button */}
@@ -247,6 +330,113 @@ const BookingScreen = () => {
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Address Selection Modal */}
+      <Modal
+        visible={showAddressModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAddressModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Address</Text>
+              <TouchableOpacity onPress={() => setShowAddressModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            {showNewAddressForm ? (
+              <View style={styles.newAddressForm}>
+                <Text style={styles.formLabel}>Address Type</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter address type (e.g., Home, Office, etc.)"
+                  value={newAddress.type}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, type: text })}
+                />
+
+                <Text style={styles.formLabel}>Complete Address</Text>
+                <TextInput
+                  style={[styles.formInput, styles.addressTextInput]}
+                  placeholder="Enter complete address"
+                  multiline={true}
+                  numberOfLines={3}
+                  value={newAddress.completeAddress}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, completeAddress: text })}
+                />
+
+                <View style={styles.formButtons}>
+                  <TouchableOpacity
+                    style={[styles.formButton, styles.cancelButton]}
+                    onPress={() => {
+                      setShowNewAddressForm(false);
+                      setNewAddress({ type: "", completeAddress: "" });
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.formButton, styles.saveButton]}
+                    onPress={saveNewAddress}
+                  >
+                    <Text style={styles.saveButtonText}>Save Address</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <ScrollView style={styles.addressList}>
+                {savedAddresses.map((addr) => (
+                  <TouchableOpacity
+                    key={addr.id}
+                    style={[
+                      styles.addressItem,
+                      selectedAddress?.id === addr.id && styles.selectedAddressItem,
+                    ]}
+                    onPress={() => selectAddress(addr)}
+                  >
+                    <View style={styles.addressItemContent}>
+                      <View style={styles.addressItemHeader}>
+                        <View style={styles.addressTypeTag}>
+                          <Text style={styles.addressTypeText}>{addr.type}</Text>
+                        </View>
+                        {selectedAddress?.id === addr.id && (
+                          <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
+                        )}
+                      </View>
+                      <Text style={styles.addressItemDetails}>{addr.completeAddress}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => {
+                        Alert.alert(
+                          "Delete Address",
+                          "Are you sure you want to delete this address?",
+                          [
+                            { text: "Cancel", style: "cancel" },
+                            { text: "Delete", onPress: () => deleteAddress(addr.id), style: "destructive" },
+                          ]
+                        );
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity
+                  style={styles.addNewAddressButton}
+                  onPress={() => setShowNewAddressForm(true)}
+                >
+                  <Ionicons name="add-circle-outline" size={24} color={BRAND_GREEN} />
+                  <Text style={styles.addNewAddressText}>Add New Address</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -464,18 +654,192 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  addressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
   addressTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: BRAND_GREEN,
-    marginBottom: 15,
+    color: "#333",
   },
-  addressInput: {
+  changeAddressText: {
+    fontSize: 14,
+    color: BRAND_GREEN,
+    fontWeight: "500",
+  },
+  selectedAddressCard: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: BRAND_GREEN,
+  },
+  addressTypeTag: {
+    backgroundColor: BRAND_GREEN,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+  addressTypeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  selectedAddressDetails: {
+    fontSize: 13,
+    color: "#666",
+    lineHeight: 18,
+  },
+  selectAddressPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderStyle: "dashed",
+  },
+  selectAddressPromptText: {
+    fontSize: 14,
+    color: BRAND_GREEN,
+    marginLeft: 10,
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "80%",
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  addressList: {
+    padding: 20,
+  },
+  addressItem: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  selectedAddressItem: {
+    borderColor: BRAND_GREEN,
+    backgroundColor: "#f0fff4",
+  },
+  addressItemContent: {
+    flex: 1,
+    marginRight: 10,
+  },
+  addressItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  addressItemDetails: {
+    fontSize: 13,
+    color: "#666",
+    lineHeight: 18,
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  addNewAddressButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 15,
+    marginTop: 10,
+    borderWidth: 2,
+    borderColor: BRAND_GREEN,
+    borderStyle: "dashed",
+  },
+  addNewAddressText: {
+    fontSize: 14,
+    color: BRAND_GREEN,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  newAddressForm: {
+    padding: 20,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  formInput: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
     padding: 12,
-    fontSize: 16,
+    fontSize: 14,
+    backgroundColor: "#f9f9f9",
+  },
+  addressTextInput: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  formButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    gap: 10,
+  },
+  formButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#f0f0f0",
+  },
+  saveButton: {
+    backgroundColor: BRAND_GREEN,
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   nextButton: {
     backgroundColor: BRAND_GREEN,
