@@ -4,17 +4,19 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   Image,
   StatusBar,
   Modal,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import { styles } from "../../styles/cart/BookingScreen.styles";
 
 // Define the date type
 interface DateItem {
@@ -48,6 +50,7 @@ const BookingScreen = () => {
     type: "",
     completeAddress: "",
   });
+  const [locationLoading, setLocationLoading] = useState(false);
 
   // Generate time slots for 24 hours
   const timeSlots = [
@@ -105,7 +108,44 @@ const BookingScreen = () => {
     const thirtyDays = generate30Days();
     setDays(thirtyDays);
     loadSavedAddresses();
+    addDummyAddresses();
   }, []);
+
+  // Add dummy addresses for demonstration
+  const addDummyAddresses = async () => {
+    try {
+      const dummyAddresses: Address[] = [
+        {
+          id: "dummy1",
+          type: "Home",
+          completeAddress: "House No. 123, Street 45, Sector F-11/4, Islamabad, Pakistan 44000",
+          isDefault: true,
+        },
+        {
+          id: "dummy2",
+          type: "Office",
+          completeAddress: "Office Suite 205, 2nd Floor, Plaza Tower, Blue Area, G-8 Markaz, Islamabad, Pakistan 44000",
+          isDefault: false,
+        },
+        {
+          id: "dummy3",
+          type: "Parents House",
+          completeAddress: "Villa No. 78, Block B, PWD Housing Society, Rawalpindi, Pakistan 46000",
+          isDefault: false,
+        }
+      ];
+
+      const stored = await AsyncStorage.getItem('savedAddresses');
+      if (!stored || JSON.parse(stored).length === 0) {
+        await AsyncStorage.setItem('savedAddresses', JSON.stringify(dummyAddresses));
+        setSavedAddresses(dummyAddresses);
+        setSelectedAddress(dummyAddresses[0]);
+        setAddress(dummyAddresses[0].completeAddress);
+      }
+    } catch (error) {
+      console.error('Error adding dummy addresses:', error);
+    }
+  };
 
   // Load saved addresses from AsyncStorage
   const loadSavedAddresses = async () => {
@@ -180,7 +220,7 @@ const BookingScreen = () => {
   // Handle navigation to the next screen
   const handleNext = () => {
     // Save booking details to AsyncStorage or pass as params
-    router.push("/cart/PaymentMethod" as any);
+    router.push("/profile/ChangePaymentMethods" as any);
   };
 
   // Handle navigation back
@@ -191,6 +231,48 @@ const BookingScreen = () => {
   // Handle edit location
   const handleEditLocation = () => {
     setShowAddressModal(true);
+  };
+
+  // Get current location
+  const getCurrentLocation = async () => {
+    try {
+      setLocationLoading(true);
+
+      // Request permission
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access location was denied');
+        setLocationLoading(false);
+        return;
+      }
+
+      // Get current position
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      // Reverse geocode to get address
+      let reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        const fullAddress = `${address.name || ''} ${address.street || ''} ${address.city || ''} ${address.region || ''} ${address.country || ''} ${address.postalCode || ''}`.trim();
+
+        // Update the new address form with the location
+        setNewAddress({
+          ...newAddress,
+          completeAddress: fullAddress || `Lat: ${location.coords.latitude}, Lon: ${location.coords.longitude}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Failed to get your current location');
+    } finally {
+      setLocationLoading(false);
+    }
   };
 
   return (
@@ -357,10 +439,26 @@ const BookingScreen = () => {
                   onChangeText={(text) => setNewAddress({ ...newAddress, type: text })}
                 />
 
-                <Text style={styles.formLabel}>Complete Address</Text>
+                <View style={styles.addressLabelContainer}>
+                  <Text style={styles.formLabel}>Complete Address</Text>
+                  <TouchableOpacity
+                    style={styles.locationButton}
+                    onPress={getCurrentLocation}
+                    disabled={locationLoading}
+                  >
+                    {locationLoading ? (
+                      <ActivityIndicator size="small" color={BRAND_GREEN} />
+                    ) : (
+                      <>
+                        <Ionicons name="location" size={18} color={BRAND_GREEN} />
+                        <Text style={styles.locationButtonText}>Use Current Location</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={[styles.formInput, styles.addressTextInput]}
-                  placeholder="Enter complete address"
+                  placeholder="Enter complete address or tap location icon"
                   multiline={true}
                   numberOfLines={3}
                   value={newAddress.completeAddress}
@@ -441,425 +539,5 @@ const BookingScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF5F7",
-    paddingTop: 20,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 40,
-    paddingBottom: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "#FFF5F7",
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTextContainer: {
-    marginLeft: 10,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#333",
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: "#666",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  illustrationContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-  },
-  illustration: {
-    width: 200,
-    height: 100,
-  },
-  selectionContainer: {
-    backgroundColor: "#fff",
-    margin: 15,
-    borderRadius: 15,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: BRAND_GREEN,
-    marginBottom: 15,
-  },
-  dateScrollView: {
-    flexDirection: "row",
-    marginBottom: 15,
-  },
-  dateItem: {
-    width: 55,
-    height: 80,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-    paddingVertical: 8,
-  },
-  selectedDateItem: {
-    backgroundColor: BRAND_GREEN,
-  },
-  todayItem: {
-    borderWidth: 2,
-    borderColor: BRAND_GREEN,
-  },
-  dayText: {
-    fontSize: 12,
-    color: "#666",
-  },
-  dateText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  monthText: {
-    fontSize: 10,
-    color: "#666",
-    marginTop: 2,
-  },
-  selectedDayText: {
-    color: "#fff",
-  },
-  selectedDateText: {
-    color: "#fff",
-  },
-  selectedMonthText: {
-    color: "#fff",
-  },
-  todayText: {
-    color: BRAND_GREEN,
-    fontWeight: "bold",
-  },
-  timeSectionLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#666",
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  timeScrollView: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
-  timeSlot: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    marginRight: 10,
-    minWidth: 130,
-    alignItems: "center",
-  },
-  selectedTimeSlot: {
-    backgroundColor: BRAND_GREEN,
-  },
-  timeSlotText: {
-    fontSize: 13,
-    color: "#333",
-    fontWeight: "500",
-  },
-  selectedTimeSlotText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  locationContainer: {
-    backgroundColor: "#fff",
-    margin: 15,
-    borderRadius: 15,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  locationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  locationTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-  editText: {
-    fontSize: 14,
-    color: BRAND_GREEN,
-  },
-  mapContainer: {
-    height: 150,
-    borderRadius: 10,
-    overflow: "hidden",
-    position: "relative",
-  },
-  mapImage: {
-    width: "100%",
-    height: "100%",
-  },
-  mapPin: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    marginLeft: -12,
-    marginTop: -24,
-    backgroundColor: "#4285F4",
-    borderRadius: 15,
-    padding: 5,
-  },
-  locationName: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  mapLogo: {
-    position: "absolute",
-    bottom: 10,
-    left: 10,
-    width: 80,
-    height: 20,
-  },
-  addressContainer: {
-    backgroundColor: "#fff",
-    margin: 15,
-    borderRadius: 15,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  addressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  addressTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-  changeAddressText: {
-    fontSize: 14,
-    color: BRAND_GREEN,
-    fontWeight: "500",
-  },
-  selectedAddressCard: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: BRAND_GREEN,
-  },
-  addressTypeTag: {
-    backgroundColor: BRAND_GREEN,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-    marginBottom: 8,
-  },
-  addressTypeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  selectedAddressDetails: {
-    fontSize: 13,
-    color: "#666",
-    lineHeight: 18,
-  },
-  selectAddressPrompt: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderStyle: "dashed",
-  },
-  selectAddressPromptText: {
-    fontSize: 14,
-    color: BRAND_GREEN,
-    marginLeft: 10,
-    fontWeight: "500",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "80%",
-    paddingBottom: 20,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  addressList: {
-    padding: 20,
-  },
-  addressItem: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#eee",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  selectedAddressItem: {
-    borderColor: BRAND_GREEN,
-    backgroundColor: "#f0fff4",
-  },
-  addressItemContent: {
-    flex: 1,
-    marginRight: 10,
-  },
-  addressItemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  addressItemDetails: {
-    fontSize: 13,
-    color: "#666",
-    lineHeight: 18,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  addNewAddressButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 10,
-    borderWidth: 2,
-    borderColor: BRAND_GREEN,
-    borderStyle: "dashed",
-  },
-  addNewAddressText: {
-    fontSize: 14,
-    color: BRAND_GREEN,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-  newAddressForm: {
-    padding: 20,
-  },
-  formLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  formInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 14,
-    backgroundColor: "#f9f9f9",
-  },
-  addressTextInput: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  formButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    gap: 10,
-  },
-  formButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#f0f0f0",
-  },
-  saveButton: {
-    backgroundColor: BRAND_GREEN,
-  },
-  cancelButtonText: {
-    color: "#666",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  saveButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  nextButton: {
-    backgroundColor: BRAND_GREEN,
-    margin: 15,
-    borderRadius: 25,
-    paddingVertical: 15,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 30,
-    marginTop: 10,
-  },
-  nextButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
 
 export default BookingScreen;
