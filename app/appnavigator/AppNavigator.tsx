@@ -80,7 +80,7 @@ const AppNavigator = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomePage} />
-      <Tab.Screen name="Lab Tests" component={Categories} />
+      <Tab.Screen name="Lab Tests" component={AllTests} />
       <Tab.Screen name="Locations" component={AllTests} />
       <Tab.Screen name="Cart" component={Cart} />
       <Tab.Screen name="Profile" component={Profile} />

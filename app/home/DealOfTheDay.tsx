@@ -1,15 +1,21 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const DealOfTheDay = () => {
+  const router = useRouter();
+
+  const handleViewAll = () => {
+    router.push("/home/AllTests");
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.textContainer}>
         <Text style={styles.title}> Citi Lab Health Watch</Text>
       </View>
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleViewAll}>
         <Text style={styles.buttonText}>View all</Text>
         <Ionicons name="arrow-forward-outline" size={16} color="#16A34A" />
       </TouchableOpacity>
