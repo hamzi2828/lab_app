@@ -62,7 +62,7 @@ const ProductHome = () => {
         badges={[discount]}
         onPress={() => console.log("Test selected:", item.name)}
         onBookPress={() => console.log("Book test:", item.name)}
-        testId={item.id}
+        testId={typeof item.id === 'string' ? parseInt(item.id, 10) : item.id}
         testData={item}
       />
     );
@@ -85,15 +85,6 @@ const ProductHome = () => {
       numColumns={2}
       columnWrapperStyle={styles.row}
       contentContainerStyle={styles.container}
-      ListFooterComponent={() => (
-        <TouchableOpacity
-          style={styles.viewAllButton}
-          onPress={() => router.push("/home/AllTests")}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.viewAllText}>View All</Text>
-        </TouchableOpacity>
-      )}
       showsVerticalScrollIndicator={false}
     />
   );

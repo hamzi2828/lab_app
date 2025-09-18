@@ -327,7 +327,7 @@ const BookingSummaryPage = () => {
                 style={styles.loginConfirmButton}
                 onPress={() => {
                   setShowLoginModal(false);
-                  router.push('/auth/LoginScreen');
+                  router.push('/auth/LoginScreen?redirect=/cart/BookingSummaryPage');
                 }}
                 activeOpacity={0.8}
               >

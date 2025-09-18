@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import AppNavigator from "../appnavigator/AppNavigator";
 import { styles } from "../../styles/auth/SignupScreen.styles";
 import {
@@ -24,6 +25,7 @@ import {
 } from "../../services/signupValidation";
 
 const SignupScreen = () => {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [showTitleDropdown, setShowTitleDropdown] = useState(false);
   const [firstname, setFirstname] = useState("");
@@ -41,6 +43,29 @@ const SignupScreen = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeSection, setActiveSection] = useState<'personal' | 'contact'>('personal');
   const [errors, setErrors] = useState<ValidationErrors>({});
+
+  // Handle tab press from AppNavigator when on signup screen
+  const handleTabPress = (routeName: string) => {
+    switch (routeName) {
+      case 'Home':
+        router.push('/');
+        break;
+      case 'Lab Tests':
+        router.push('/home/AllTests');
+        break;
+      case 'Cart':
+        router.push('/cart/Cart');
+        break;
+      case 'Profile':
+        router.push('/profile/Profile');
+        break;
+      case 'Locations':
+        router.push('/home/AllTests');
+        break;
+      default:
+        router.push('/');
+    }
+  };
 
   const handleNextSection = () => {
     const personalData = {
@@ -472,7 +497,7 @@ const SignupScreen = () => {
       
       {/* Bottom Tab Navigation */}
       <View style={styles.tabBarContainer}>
-        <AppNavigator />
+        <AppNavigator isLoginScreen={true} onTabPress={handleTabPress} />
       </View>
     </View>
   );

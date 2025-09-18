@@ -6,6 +6,7 @@ export default function RootLayout() {
       screenOptions={{ headerShown: false }}
       initialRouteName="auth/LoginScreen"
     >
+      <Stack.Screen name="index" />
       <Stack.Screen name="auth/LoginScreen" />
       <Stack.Screen name="auth/ForgotPasswordScreen" />
       <Stack.Screen name="auth/SignupScreen" />
@@ -14,15 +15,19 @@ export default function RootLayout() {
       <Stack.Screen name="common/Filters" />
       <Stack.Screen name="cart/Cart" />
       <Stack.Screen name="cart/BookingScreen" />
+      <Stack.Screen name="cart/BookingSummaryPage" />
       {/* Profile Screens */}
       <Stack.Screen name="profile/Profile" />
       <Stack.Screen name="profile/Address" />
       <Stack.Screen name="profile/EditAddress" />
       <Stack.Screen name="profile/ChangePaymentMethods" />
+      <Stack.Screen name="profile/PreviousBookings" />
+      <Stack.Screen name="profile/BookingDetails" />
       <Stack.Screen name="likes/Likes" />
       <Stack.Screen name="orders/DeliveredOrders" />
       <Stack.Screen name="orders/ReturnedOrders" />
       <Stack.Screen name="orders/InProgressOrders" />
+      <Stack.Screen name="home/AllTests" />
     </Stack>
   );
 }

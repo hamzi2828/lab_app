@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from "../../styles/auth/LoginScreen.styles";
+import AppNavigator from "../appnavigator/AppNavigator";
 import {
   validateLoginForm,
   submitLoginForm,
@@ -33,6 +34,46 @@ const LoginScreen = () => {
   const [errors, setErrors] = useState<LoginValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const redirectTo = params.redirect as string;
+
+  // Validate redirect routes
+  const isValidRedirect = (route: string): boolean => {
+    const validRoutes = [
+      '/cart/BookingSummaryPage',
+      '/cart/BookingScreen',
+      '/cart/Cart',
+      '/home/HomePageScreen',
+      '/home/AllTests',
+      '/profile/Profile',
+      '/profile/Address',
+      '/profile/PreviousBookings'
+    ];
+    return validRoutes.includes(route);
+  };
+
+  // Handle tab press from AppNavigator when on login screen
+  const handleTabPress = (routeName: string) => {
+    switch (routeName) {
+      case 'Home':
+        router.push('/');
+        break;
+      case 'Lab Tests':
+        router.push('/home/AllTests');
+        break;
+      case 'Cart':
+        router.push('/cart/Cart');
+        break;
+      case 'Profile':
+        router.push('/profile/Profile');
+        break;
+      case 'Locations':
+        router.push('/home/AllTests');
+        break;
+      default:
+        router.push('/');
+    }
+  };
 
   const handleContinue = async () => {
     if (isLoading) return;
@@ -67,7 +108,14 @@ const LoginScreen = () => {
         [
           {
             text: 'Continue',
-            onPress: () => router.replace("/")
+            onPress: () => {
+              // If redirectTo is provided and valid, navigate there, otherwise go to main app
+              if (redirectTo && isValidRedirect(redirectTo)) {
+                router.replace(redirectTo as any);
+              } else {
+                router.replace("/");
+              }
+            }
           }
         ]
       );
@@ -292,6 +340,11 @@ const LoginScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Bottom Tab Navigation */}
+      <View style={styles.tabBarContainer}>
+        <AppNavigator isLoginScreen={true} onTabPress={handleTabPress} />
+      </View>
     </View>
   );
 };
