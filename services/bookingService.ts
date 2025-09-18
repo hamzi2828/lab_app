@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import * as Location from 'expo-location';
+import { isUserLoggedIn, getUserData } from './loginValidation';
 
 // Date and time interfaces
 export interface DateItem {
@@ -41,8 +42,9 @@ export interface UserSession {
   token?: string;
   userId?: string;
   userEmail?: string;
+  userData?: any; // Full user data from login
 }
-
+const API_BASE_URL = 'https://hmis.rapidreporting.us';
 class BookingService {
   private readonly dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   private readonly monthNames = [
@@ -343,19 +345,19 @@ class BookingService {
     }
   }
 
-  // Check if user is logged in
+  // Check if user is logged in (using same logic as Profile.tsx)
   async checkUserSession(): Promise<UserSession> {
     try {
-      const userToken = await AsyncStorage.getItem('userToken');
-      const userId = await AsyncStorage.getItem('userId');
-      const userEmail = await AsyncStorage.getItem('userEmail');
+      const loggedIn = await isUserLoggedIn();
 
-      if (userToken && userId) {
+      if (loggedIn) {
+        const userData = await getUserData();
         return {
           isLoggedIn: true,
-          token: userToken,
-          userId: userId,
-          userEmail: userEmail || undefined,
+          token: userData?.token || 'no-token', // API doesn't use tokens
+          userId: userData?.user_id,
+          userEmail: userData?.email,
+          userData: userData // Include full user data
         };
       }
 
@@ -420,58 +422,122 @@ class BookingService {
   // Submit booking to API
   async submitBooking(bookingData: BookingData, userSession: UserSession): Promise<{ success: boolean; message: string; bookingId?: string }> {
     try {
-      // Prepare booking payload
-      const bookingPayload = {
+      console.log('=== BOOKING SUBMISSION DETAILS ===');
+      console.log('📅 Selected Date ID:', bookingData.selectedDate);
+      console.log('⏰ Selected Time:', bookingData.selectedTime);
+      console.log('📍 Selected Address:', bookingData.selectedAddress);
+      console.log('🧪 Booked Tests Count:', bookingData.bookedTests.length);
+      console.log('👤 User Session:', {
+        isLoggedIn: userSession.isLoggedIn,
         userId: userSession.userId,
-        selectedDate: bookingData.selectedDate,
-        selectedTime: bookingData.selectedTime,
-        deliveryAddress: {
+        userEmail: userSession.userEmail,
+        userData: userSession.userData
+      });
+
+      console.log('🧪 Test Details:');
+      bookingData.bookedTests.forEach((test, index) => {
+        console.log(`  Test ${index + 1}:`, {
+          id: test.id,
+          name: test.name,
+          code: test.code,
+          originalPrice: test.originalPrice,
+          discountedPrice: test.discountedPrice,
+          category: test.category,
+          type: test.type
+        });
+      });
+
+      // Prepare booking payload with proper structure
+      const bookingPayload = {
+        user_id: userSession.userId,
+        user_name: userSession.userData?.name,
+        user_email: userSession.userData?.email,
+        user_phone: userSession.userData?.phone,
+        selected_date: bookingData.selectedDate,
+        selected_time: bookingData.selectedTime,
+        delivery_address: {
           type: bookingData.selectedAddress?.type,
-          completeAddress: bookingData.selectedAddress?.completeAddress,
+          complete_address: bookingData.selectedAddress?.completeAddress,
         },
         tests: bookingData.bookedTests.map(test => ({
           id: test.id,
           name: test.name,
-          price: test.discountedPrice || test.price,
+          code: test.code,
+          price: parseFloat(test.discountedPrice?.replace(/[^\\d.]/g, '') || test.price?.toString() || '0'),
+          category: test.category || test.type || 'General',
         })),
-        totalAmount: this.calculateTotal(bookingData.bookedTests),
-        bookingDateTime: new Date().toISOString(),
+        total_amount: this.calculateTotal(bookingData.bookedTests),
+        booking_date_time: new Date().toISOString(),
+        booking_type: 'home_collection',
+        status: 'pending'
       };
 
-      // TODO: Replace with your actual API endpoint
-      const response = await fetch('YOUR_API_ENDPOINT/bookings', {
+      console.log('💰 Total Amount:', this.calculateTotal(bookingData.bookedTests));
+      console.log('📋 Final Booking Payload:');
+      console.log(JSON.stringify(bookingPayload, null, 2));
+
+      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userSession.token}`,
+          'Accept': 'application/json',
         },
         body: JSON.stringify(bookingPayload),
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      console.log('Booking response status:', response.status);
 
+      const responseText = await response.text();
+      console.log('Raw booking response:', responseText);
+
+      // Check if it's HTML error page
+      if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+        if (responseText.includes('The action you have requested is not allowed')) {
+          throw new Error('Booking service unavailable. Please try again later.');
+        }
+        throw new Error('Service temporarily unavailable.');
+      }
+
+      // Parse JSON response
+      let result: any;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse booking response:', parseError);
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('Parsed booking response:', result);
+
+      if (response.ok && result.success) {
         // Clear cart and booking data after successful submission
         await this.clearSavedBookingData();
         await AsyncStorage.removeItem('bookedTestsDetails');
 
         return {
           success: true,
-          message: 'Booking submitted successfully!',
-          bookingId: result.bookingId,
+          message: result.message || 'Booking submitted successfully!',
+          bookingId: result.booking_id || result.data?.booking_id,
         };
       } else {
-        const errorData = await response.json();
         return {
           success: false,
-          message: errorData.message || 'Failed to submit booking',
+          message: result.message || 'Failed to submit booking',
         };
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
+
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        return {
+          success: false,
+          message: 'Cannot connect to server. Please check your internet connection.',
+        };
+      }
+
       return {
         success: false,
-        message: 'Network error. Please check your connection and try again.',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
       };
     }
   }
