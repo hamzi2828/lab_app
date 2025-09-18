@@ -188,15 +188,35 @@ const AppNavigator = ({ isLoginScreen = false, onTabPress, refreshCartCount }: A
           elevation: 5,
         },
         tabBarButton: isLoginScreen ? (props) => {
-          // Filter out problematic props and handle null values
-          const { delayLongPress, disabled, ...safeProps } = props;
+          // Filter out problematic props and handle null/incompatible values
+          const {
+            delayLongPress,
+            disabled,
+            onBlur,
+            onFocus,
+            onLayout,
+            onLongPress,
+            onPress,
+            onPressIn,
+            onPressOut,
+            ref,
+            ...safeProps
+          } = props;
+
           return (
             <TouchableOpacity
               {...safeProps}
               delayLongPress={delayLongPress ?? undefined}
               disabled={disabled ?? undefined}
+              onBlur={onBlur || undefined}
+              onFocus={onFocus || undefined}
+              onLayout={onLayout || undefined}
+              onLongPress={onLongPress || undefined}
+              onPressIn={onPressIn || undefined}
+              onPressOut={onPressOut || undefined}
               onPress={() => handleTabPress(route.name)}
               style={props.style}
+              // Exclude ref to avoid type conflicts
             />
           );
         } : undefined,
