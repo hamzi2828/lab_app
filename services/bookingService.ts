@@ -547,7 +547,22 @@ class BookingService {
       console.log('📋 Final Booking Payload:');
       console.log(JSON.stringify(bookingPayload, null, 2));
 
-      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
+      // Console log exact payload for Postman testing
+      console.log('🧪 COPY THIS PAYLOAD FOR POSTMAN TESTING:');
+      console.log('=== URL ===');
+      console.log(`${API_BASE_URL}/api/bookings`);
+      console.log('=== METHOD ===');
+      console.log('POST');
+      console.log('=== HEADERS ===');
+      console.log(JSON.stringify({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }, null, 2));
+      console.log('=== BODY (copy this exact JSON) ===');
+      console.log(JSON.stringify(bookingPayload));
+      console.log('=== END POSTMAN DATA ===');
+
+      const response = await fetch(`${API_BASE_URL}/api/create-booking`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -556,10 +571,30 @@ class BookingService {
         body: JSON.stringify(bookingPayload),
       });
 
-      console.log('Booking response status:', response.status);
+      console.log('🔍 Booking response status:', response.status);
+      console.log('🔍 Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
 
       const responseText = await response.text();
-      console.log('Raw booking response:', responseText);
+      console.log('🔍 Raw booking response:', responseText);
+
+      // Detailed error analysis
+      if (response.status === 403) {
+        console.log('❌ 403 FORBIDDEN ERROR ANALYSIS:');
+        console.log('- User authenticated:', !!userSession.userData);
+        console.log('- User ID:', userSession.userId);
+        console.log('- Response content type:', response.headers.get('content-type'));
+        console.log('- Is HTML response:', responseText.includes('<!DOCTYPE html>'));
+
+        if (responseText.includes('<!DOCTYPE html>')) {
+          console.log('🚨 Server returned HTML error page instead of JSON');
+          console.log('🔧 POSSIBLE CAUSES:');
+          console.log('  1. API endpoint disabled or moved');
+          console.log('  2. CSRF token required');
+          console.log('  3. Missing authentication header');
+          console.log('  4. User permissions insufficient');
+          console.log('  5. Request validation failed');
+        }
+      }
 
       // Check if it's HTML error page
       if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
