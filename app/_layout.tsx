@@ -20,7 +20,6 @@ export default function RootLayout() {
       <Stack.Screen name="profile/Profile" />
       <Stack.Screen name="profile/Address" />
       <Stack.Screen name="profile/EditAddress" />
-      <Stack.Screen name="profile/ChangePaymentMethods" />
       <Stack.Screen name="profile/PreviousBookings" />
       <Stack.Screen name="profile/BookingDetails" />
       <Stack.Screen name="likes/Likes" />
