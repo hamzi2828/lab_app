@@ -15,10 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
 import { styles } from "../../styles/cart/BookingScreen.styles";
-import bookingService, { BookingData, DateItem, Address } from "../../services/bookingService";
-import addressService, { UserAddress } from "../../services/addressService";
-import { isUserLoggedIn, getUserData } from "../../services/loginValidation";
-import * as Location from 'expo-location';
+import bookingService, { BookingData, Address, DateItem } from "../../services/bookingService";
 
 
 const BookingScreen = () => {
@@ -27,14 +24,13 @@ const BookingScreen = () => {
   const [selectedTime, setSelectedTime] = useState<string>("10:00 AM - 11:00 AM");
   const [address, setAddress] = useState<string>("");
   const [days, setDays] = useState<DateItem[]>([]);
-  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<UserAddress | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    address_type: 'home' as 'home' | 'work' | 'other',
-    complete_address: "",
-    is_default: false,
+  const [newAddress, setNewAddress] = useState<Partial<Address>>({
+    type: "",
+    completeAddress: "",
   });
   const [locationLoading, setLocationLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -49,122 +45,52 @@ const BookingScreen = () => {
 
   const initializeData = async () => {
     try {
-      // Load booking data (dates, times, booked tests)
       const data = await bookingService.initializeBookingData();
       setDays(data.dates);
       setTimeSlots(data.timeSlots);
       setSelectedDate(data.defaultDate);
       setSelectedTime(data.defaultTime);
+      setSavedAddresses(data.addresses);
       setBookedTests(data.bookedTests);
 
-      // Load user addresses from API
-      await loadUserAddresses();
+      if (data.defaultAddress) {
+        setSelectedAddress(data.defaultAddress);
+        setAddress(data.defaultAddress.completeAddress);
+      }
     } catch (error) {
       console.error('Error initializing data:', error);
     }
   };
 
-  const loadUserAddresses = async () => {
-    try {
-      const isLoggedIn = await isUserLoggedIn();
-      if (!isLoggedIn) {
-        console.log('User not logged in, skipping address loading');
-        return;
-      }
-
-      const response = await addressService.getCurrentUserAddresses();
-      if (response.success && Array.isArray(response.data)) {
-        setSavedAddresses(response.data);
-
-        // Find and set default address
-        const defaultAddress = response.data.find(addr => addr.is_default);
-        if (defaultAddress) {
-          setSelectedAddress(defaultAddress);
-          setAddress(defaultAddress.complete_address);
-        }
-      } else {
-        console.log('No addresses found or API error:', response.message);
-        setSavedAddresses([]);
-      }
-    } catch (error) {
-      console.error('Error loading user addresses:', error);
-      setSavedAddresses([]);
-    }
-  };
-
-  // Save new address using API
+  // Save new address
   const saveNewAddress = async () => {
-    try {
-      if (!newAddress.complete_address.trim()) {
-        Alert.alert('Error', 'Please enter a complete address');
-        return;
-      }
-
-      const result = await addressService.createAddressForCurrentUser(
-        newAddress.address_type,
-        newAddress.complete_address,
-        newAddress.is_default
-      );
-
-      if (result.success) {
-        Alert.alert('Success', 'Address saved successfully!');
-        setShowNewAddressForm(false);
-        setShowAddressModal(false);
-        setNewAddress({
-          address_type: 'home',
-          complete_address: "",
-          is_default: false,
-        });
-        // Reload addresses
-        await loadUserAddresses();
-      } else {
-        Alert.alert('Error', result.message || 'Failed to save address');
-      }
-    } catch (error) {
-      console.error('Error saving address:', error);
-      Alert.alert('Error', 'Failed to save address. Please try again.');
-    }
+    await bookingService.handleNewAddressSubmission(
+      newAddress,
+      setSavedAddresses,
+      setSelectedAddress,
+      setAddress,
+      setShowNewAddressForm,
+      setShowAddressModal,
+      setNewAddress,
+      (message) => Alert.alert('Error', message)
+    );
   };
 
-  // Delete an address using API
-  const deleteAddress = async (addressId: number) => {
-    try {
-      const result = await addressService.deleteAddressForCurrentUser(addressId);
-
-      if (result.success) {
-        Alert.alert('Success', 'Address deleted successfully');
-        // If deleted address was selected, clear selection
-        if (selectedAddress?.id === addressId) {
-          setSelectedAddress(null);
-          setAddress('');
-        }
-        // Reload addresses
-        await loadUserAddresses();
-      } else {
-        Alert.alert('Error', result.message || 'Failed to delete address');
-      }
-    } catch (error) {
-      console.error('Error deleting address:', error);
-      Alert.alert('Error', 'Failed to delete address. Please try again.');
-    }
+  // Delete an address
+  const deleteAddress = async (addressId: string) => {
+    await bookingService.handleAddressDeletion(
+      addressId,
+      selectedAddress,
+      setSavedAddresses,
+      setSelectedAddress,
+      setAddress,
+      (message) => Alert.alert('Error', message)
+    );
   };
 
   // Select an address
-  const selectAddress = (addr: UserAddress) => {
-    setSelectedAddress(addr);
-    setAddress(addr.complete_address);
-    setShowAddressModal(false);
-  };
-
-  // Convert UserAddress to Address format for backward compatibility
-  const convertToLegacyAddress = (userAddr: UserAddress | null): Address | null => {
-    if (!userAddr) return null;
-    return {
-      id: userAddr.id.toString(),
-      type: userAddr.address_type,
-      completeAddress: userAddr.complete_address,
-      isDefault: userAddr.is_default,
-    };
+  const selectAddress = (addr: Address) => {
+    bookingService.selectAddress(addr, setSelectedAddress, setAddress, setShowAddressModal);
   };
 
   // Check if submit button should be enabled
@@ -172,7 +98,7 @@ const BookingScreen = () => {
     return bookingService.isSubmitEnabled({
       selectedDate,
       selectedTime,
-      selectedAddress: convertToLegacyAddress(selectedAddress),
+      selectedAddress,
       address,
       bookedTests,
     });
@@ -193,7 +119,7 @@ const BookingScreen = () => {
         selectedDate,
         selectedTime,
         address,
-        convertToLegacyAddress(selectedAddress),
+        selectedAddress,
         bookedTests
       );
 
@@ -217,56 +143,14 @@ const BookingScreen = () => {
     setShowAddressModal(true);
   };
 
-  // Get current location using Expo Location
+  // Get current location
   const getCurrentLocation = async () => {
-    setLocationLoading(true);
-
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Location permission is needed to get your current address automatically.'
-        );
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (reverseGeocode.length > 0) {
-        const addressData = reverseGeocode[0];
-        const addressParts = [
-          addressData.name,
-          addressData.street,
-          addressData.city,
-          addressData.region,
-          addressData.country,
-          addressData.postalCode
-        ].filter(part => part && part.trim());
-
-        const fullAddress = addressParts.length > 0
-          ? addressParts.join(', ')
-          : `Lat: ${location.coords.latitude}, Lon: ${location.coords.longitude}`;
-
-        setNewAddress({
-          ...newAddress,
-          complete_address: fullAddress,
-        });
-      }
-    } catch (error) {
-      console.error('Error getting current location:', error);
-      Alert.alert('Error', 'Failed to get your current location. Please check if location services are enabled.');
-    } finally {
-      setLocationLoading(false);
-    }
+    await bookingService.handleLocationFetch(
+      newAddress,
+      setNewAddress,
+      setLocationLoading,
+      (message) => Alert.alert('Location Error', message)
+    );
   };
 
   return (
@@ -389,14 +273,9 @@ const BookingScreen = () => {
           {selectedAddress ? (
             <View style={styles.selectedAddressCard}>
               <View style={styles.addressTypeTag}>
-                <Text style={styles.addressTypeText}>{selectedAddress.address_type.toUpperCase()}</Text>
+                <Text style={styles.addressTypeText}>{selectedAddress.type}</Text>
               </View>
-              <Text style={styles.selectedAddressDetails}>{selectedAddress.complete_address}</Text>
-              {selectedAddress.is_default && (
-                <View style={styles.defaultBadge}>
-                  <Text style={styles.defaultBadgeText}>DEFAULT</Text>
-                </View>
-              )}
+              <Text style={styles.selectedAddressDetails}>{selectedAddress.completeAddress}</Text>
             </View>
           ) : (
             <TouchableOpacity style={styles.selectAddressPrompt} onPress={handleEditLocation}>
@@ -450,27 +329,12 @@ const BookingScreen = () => {
             {showNewAddressForm ? (
               <View style={styles.newAddressForm}>
                 <Text style={styles.formLabel}>Address Type</Text>
-                <View style={styles.addressTypeSelector}>
-                  {(['home', 'work', 'other'] as const).map((type) => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.typeButton,
-                        newAddress.address_type === type && styles.selectedTypeButton,
-                      ]}
-                      onPress={() => setNewAddress({ ...newAddress, address_type: type })}
-                    >
-                      <Text
-                        style={[
-                          styles.typeButtonText,
-                          newAddress.address_type === type && styles.selectedTypeButtonText,
-                        ]}
-                      >
-                        {type.toUpperCase()}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter address type (e.g., Home, Office, etc.)"
+                  value={newAddress.type}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, type: text })}
+                />
 
                 <View style={styles.addressLabelContainer}>
                   <Text style={styles.formLabel}>Complete Address</Text>
@@ -494,32 +358,16 @@ const BookingScreen = () => {
                   placeholder="Enter complete address or tap location icon"
                   multiline={true}
                   numberOfLines={3}
-                  value={newAddress.complete_address}
-                  onChangeText={(text) => setNewAddress({ ...newAddress, complete_address: text })}
+                  value={newAddress.completeAddress}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, completeAddress: text })}
                 />
-
-                <TouchableOpacity
-                  style={styles.defaultToggle}
-                  onPress={() => setNewAddress({ ...newAddress, is_default: !newAddress.is_default })}
-                >
-                  <View style={[styles.checkbox, newAddress.is_default && styles.checkboxSelected]}>
-                    {newAddress.is_default && (
-                      <Ionicons name="checkmark" size={14} color="#fff" />
-                    )}
-                  </View>
-                  <Text style={styles.defaultToggleText}>Set as default address</Text>
-                </TouchableOpacity>
 
                 <View style={styles.formButtons}>
                   <TouchableOpacity
                     style={[styles.formButton, styles.cancelButton]}
                     onPress={() => {
                       setShowNewAddressForm(false);
-                      setNewAddress({
-                        address_type: 'home',
-                        complete_address: "",
-                        is_default: false,
-                      });
+                      setNewAddress({ type: "", completeAddress: "" });
                     }}
                   >
                     <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -534,67 +382,43 @@ const BookingScreen = () => {
               </View>
             ) : (
               <ScrollView style={styles.addressList}>
-                {savedAddresses.length === 0 ? (
-                  <View style={styles.emptyAddressList}>
-                    <Ionicons name="location-outline" size={48} color="#ccc" />
-                    <Text style={styles.emptyAddressText}>No saved addresses</Text>
-                    <Text style={styles.emptyAddressSubtext}>Add a new address to get started</Text>
-                  </View>
-                ) : (
-                  savedAddresses.map((addr) => (
-                    <TouchableOpacity
-                      key={addr.id}
-                      style={[
-                        styles.addressItem,
-                        selectedAddress?.id === addr.id && styles.selectedAddressItem,
-                      ]}
-                      onPress={() => selectAddress(addr)}
-                    >
-                      <View style={styles.addressItemContent}>
-                        <View style={styles.addressItemHeader}>
-                          <View style={[
-                            styles.addressTypeTag,
-                            { backgroundColor: addressService.getAddressTypeBackgroundColor(addr.address_type) }
-                          ]}>
-                            <Text style={[
-                              styles.addressTypeText,
-                              { color: addressService.getAddressTypeColor(addr.address_type) }
-                            ]}>
-                              {addr.address_type.toUpperCase()}
-                            </Text>
-                          </View>
-                          {addr.is_default && (
-                            <View style={styles.defaultBadge}>
-                              <Text style={styles.defaultBadgeText}>DEFAULT</Text>
-                            </View>
-                          )}
-                          {selectedAddress?.id === addr.id && (
-                            <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
-                          )}
+                {savedAddresses.map((addr) => (
+                  <TouchableOpacity
+                    key={addr.id}
+                    style={[
+                      styles.addressItem,
+                      selectedAddress?.id === addr.id && styles.selectedAddressItem,
+                    ]}
+                    onPress={() => selectAddress(addr)}
+                  >
+                    <View style={styles.addressItemContent}>
+                      <View style={styles.addressItemHeader}>
+                        <View style={styles.addressTypeTag}>
+                          <Text style={styles.addressTypeText}>{addr.type}</Text>
                         </View>
-                        <Text style={styles.addressItemDetails}>{addr.complete_address}</Text>
-                        <Text style={styles.addressCreatedDate}>
-                          Added: {new Date(addr.created_at).toLocaleDateString()}
-                        </Text>
+                        {selectedAddress?.id === addr.id && (
+                          <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
+                        )}
                       </View>
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => {
-                          Alert.alert(
-                            "Delete Address",
-                            "Are you sure you want to delete this address?",
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              { text: "Delete", onPress: () => deleteAddress(addr.id), style: "destructive" },
-                            ]
-                          );
-                        }}
-                      >
-                        <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
-                      </TouchableOpacity>
+                      <Text style={styles.addressItemDetails}>{addr.completeAddress}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => {
+                        Alert.alert(
+                          "Delete Address",
+                          "Are you sure you want to delete this address?",
+                          [
+                            { text: "Cancel", style: "cancel" },
+                            { text: "Delete", onPress: () => deleteAddress(addr.id), style: "destructive" },
+                          ]
+                        );
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
                     </TouchableOpacity>
-                  ))
-                )}
+                  </TouchableOpacity>
+                ))}
 
                 <TouchableOpacity
                   style={styles.addNewAddressButton}

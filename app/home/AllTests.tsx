@@ -29,7 +29,7 @@ const AllTests = () => {
       case "blood-tests":
         return "general";
       case "radiology":
-        return "radiology";
+        return "pathology";
       case "all-packages":
         return "all"; // Will be filtered client-side anyway
       default:

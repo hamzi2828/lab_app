@@ -207,4 +207,29 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  fallbackBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff3cd",
+    padding: 12,
+    marginBottom: 15,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#ff9800",
+  },
+  fallbackText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#856404",
+    marginLeft: 8,
+  },
+  retryIconButton: {
+    padding: 4,
+  },
+  fallbackNote: {
+    fontSize: 12,
+    color: "#999",
+    fontStyle: "italic",
+    marginTop: 4,
+  },
 });
