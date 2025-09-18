@@ -11,7 +11,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import CartItem from "./CartItem";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/cart/Cart.styles";
-import { getTestImage } from "../../services/testsService";
+import { getCartTestImage } from "../../services/testsService";
 import { cartService, CartTest } from "../../services/cartService";
 
 const Cart = () => {
@@ -98,7 +98,7 @@ const Cart = () => {
             item={{
               id: item.id.toString(),
               title: item.name,
-              image: getTestImage(item),
+              image: getCartTestImage(item),
               originalPrice: item.originalPrice,
               discountedPrice: item.discountedPrice,
               badges: item.badges

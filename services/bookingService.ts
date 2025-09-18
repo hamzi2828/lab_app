@@ -410,6 +410,77 @@ class BookingService {
     }
   }
 
+  // Save current booking data for navigation to summary page
+  async saveCurrentBookingData(
+    selectedDate: number,
+    selectedTime: string,
+    address: string,
+    selectedAddress: Address | null,
+    bookedTests: any[]
+  ): Promise<void> {
+    try {
+      const bookingData: BookingData = {
+        selectedDate,
+        selectedTime,
+        address,
+        selectedAddress,
+        bookedTests,
+      };
+      await AsyncStorage.setItem('currentBookingData', JSON.stringify(bookingData));
+    } catch (error) {
+      console.error('Error saving current booking data:', error);
+      throw new Error('Failed to save booking data');
+    }
+  }
+
+  // Get current booking data with additional details
+  async getBookingData(): Promise<{
+    selectedDate: number;
+    selectedTime: string;
+    address: string;
+    selectedAddress: Address | null;
+    bookedTests: any[];
+    dates: DateItem[];
+  }> {
+    try {
+      const saved = await AsyncStorage.getItem('currentBookingData');
+      const bookingData = saved ? JSON.parse(saved) : null;
+
+      if (!bookingData) {
+        // Fallback to initialize new data
+        const initData = await this.initializeBookingData();
+        return {
+          selectedDate: initData.defaultDate,
+          selectedTime: initData.defaultTime,
+          address: initData.defaultAddress?.completeAddress || '',
+          selectedAddress: initData.defaultAddress,
+          bookedTests: initData.bookedTests,
+          dates: initData.dates,
+        };
+      }
+
+      // Add dates for display
+      const dates = this.generateDates(30);
+
+      return {
+        ...bookingData,
+        dates,
+      };
+    } catch (error) {
+      console.error('Error getting booking data:', error);
+      // Return fallback data
+      const initData = await this.initializeBookingData();
+      return {
+        selectedDate: initData.defaultDate,
+        selectedTime: initData.defaultTime,
+        address: initData.defaultAddress?.completeAddress || '',
+        selectedAddress: initData.defaultAddress,
+        bookedTests: initData.bookedTests,
+        dates: initData.dates,
+      };
+    }
+  }
+
   // Clear saved booking data
   async clearSavedBookingData(): Promise<void> {
     try {

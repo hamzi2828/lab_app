@@ -188,6 +188,11 @@ export const getTestImage = (test: Test) => {
   return { uri: test.image_url || 'https://via.placeholder.com/150?text=Test+Image' };
 };
 
+// Helper function for CartTest (handles optional is_active)
+export const getCartTestImage = (test: { image_url: string | null }) => {
+  return { uri: test.image_url || 'https://via.placeholder.com/150?text=Test+Image' };
+};
+
 // Helper function to get image URL or fallback
 export const getTestImageUrl = (test: Test): string => {
   return test.image_url || 'https://via.placeholder.com/150?text=Test+Image';

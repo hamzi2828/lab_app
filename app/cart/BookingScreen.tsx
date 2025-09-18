@@ -104,59 +104,33 @@ const BookingScreen = () => {
     });
   };
 
-  // Handle booking submission
-  const handleSubmit = async () => {
-    setSubmitting(true);
+  // Handle next button (navigate to summary page)
+  const handleNext = async () => {
+    if (!isSubmitEnabled()) {
+      Alert.alert('Incomplete Information', 'Please fill in all required fields');
+      return;
+    }
 
-    await bookingService.handleCompleteBookingSubmission(
-      selectedDate,
-      selectedTime,
-      address,
-      selectedAddress,
-      bookedTests,
-      // On success
-      (bookingId) => {
-        setSubmitting(false);
-        Alert.alert(
-          'Booking Successful!',
-          `Your booking has been submitted successfully. Booking ID: ${bookingId}`,
-          [
-            {
-              text: 'OK',
-              onPress: () => router.push('/home/HomePageScreen'),
-            }
-          ]
-        );
-      },
-      // On login required
-      () => {
-        setSubmitting(false);
-        Alert.alert(
-          'Login Required',
-          'Please login to complete your booking. Your booking details will be saved.',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Login',
-              onPress: () => router.push('/auth/LoginScreen'),
-            }
-          ]
-        );
-      },
-      // On error
-      (message) => {
-        setSubmitting(false);
-        Alert.alert('Booking Failed', message);
-      },
-      // On validation error
-      (message) => {
-        setSubmitting(false);
-        Alert.alert('Incomplete Information', message);
-      }
-    );
+    try {
+      setSubmitting(true);
+
+      // Save current booking data
+      await bookingService.saveCurrentBookingData(
+        selectedDate,
+        selectedTime,
+        address,
+        selectedAddress,
+        bookedTests
+      );
+
+      setSubmitting(false);
+
+      // Navigate to booking summary page
+      router.push('/cart/BookingSummaryPage');
+    } catch (error) {
+      setSubmitting(false);
+      Alert.alert('Error', 'Failed to save booking data. Please try again.');
+    }
   };
 
   // Handle navigation back
@@ -311,26 +285,26 @@ const BookingScreen = () => {
           )}
         </View>
 
-        {/* Submit Button */}
+        {/* Next Button */}
         <TouchableOpacity
           style={[
             styles.submitButton,
             isSubmitEnabled() ? styles.submitButtonEnabled : styles.submitButtonDisabled
           ]}
-          onPress={handleSubmit}
+          onPress={handleNext}
           disabled={!isSubmitEnabled() || submitting}
         >
           {submitting ? (
             <View style={styles.submitButtonContent}>
               <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.submitButtonText}>Submitting...</Text>
+              <Text style={styles.submitButtonText}>Processing...</Text>
             </View>
           ) : (
             <Text style={[
               styles.submitButtonText,
               !isSubmitEnabled() && styles.submitButtonTextDisabled
             ]}>
-              Submit Booking
+              Next
             </Text>
           )}
         </TouchableOpacity>
