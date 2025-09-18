@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -29,6 +30,7 @@ const BookingSummaryPage = () => {
   const [address, setAddress] = useState<string>("");
   const [bookedTests, setBookedTests] = useState<any[]>([]);
   const [days, setDays] = useState<DateItem[]>([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     loadBookingData();
@@ -83,20 +85,7 @@ const BookingSummaryPage = () => {
       // On login required
       () => {
         setSubmitting(false);
-        Alert.alert(
-          'Login Required',
-          'Please login to complete your booking. Your booking details will be saved.',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Login',
-              onPress: () => router.push('/auth/LoginScreen'),
-            }
-          ]
-        );
+        setShowLoginModal(true);
       },
       // On error
       (message) => {
@@ -287,6 +276,68 @@ const BookingSummaryPage = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Custom Login Required Modal */}
+      <Modal
+        visible={showLoginModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLoginModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.loginModalContainer}>
+            {/* Header */}
+            <View style={styles.loginModalHeader}>
+              <View style={styles.loginIconContainer}>
+                <Ionicons name="lock-closed" size={32} color={BRAND_GREEN} />
+              </View>
+              <Text style={styles.loginModalTitle}>Login Required</Text>
+              <Text style={styles.loginModalSubtitle}>
+                Please sign in to complete your booking
+              </Text>
+            </View>
+
+            {/* Content */}
+            <View style={styles.loginModalContent}>
+              <View style={styles.loginBenefitItem}>
+                <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
+                <Text style={styles.loginBenefitText}>Your booking details will be saved</Text>
+              </View>
+              <View style={styles.loginBenefitItem}>
+                <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
+                <Text style={styles.loginBenefitText}>Track your booking history</Text>
+              </View>
+              <View style={styles.loginBenefitItem}>
+                <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
+                <Text style={styles.loginBenefitText}>Faster future bookings</Text>
+              </View>
+            </View>
+
+            {/* Actions */}
+            <View style={styles.loginModalActions}>
+              <TouchableOpacity
+                style={styles.loginCancelButton}
+                onPress={() => setShowLoginModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.loginCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.loginConfirmButton}
+                onPress={() => {
+                  setShowLoginModal(false);
+                  router.push('/auth/LoginScreen');
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="log-in" size={18} color="#fff" />
+                <Text style={styles.loginConfirmButtonText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
