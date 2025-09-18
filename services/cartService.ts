@@ -37,6 +37,32 @@ export interface CartItem {
 const CART_STORAGE_KEY = 'bookedTestsDetails';
 
 class CartService {
+  private cartChangeListeners: (() => void)[] = [];
+
+  // Add listener for cart changes
+  addCartChangeListener(listener: () => void) {
+    this.cartChangeListeners.push(listener);
+  }
+
+  // Remove listener
+  removeCartChangeListener(listener: () => void) {
+    this.cartChangeListeners = this.cartChangeListeners.filter(l => l !== listener);
+  }
+
+  // Notify all listeners of cart changes
+  private notifyCartChange() {
+    this.cartChangeListeners.forEach((listener, index) => {
+      try {
+        if (typeof listener === 'function') {
+          listener();
+        } else {
+          console.warn(`Cart change listener at index ${index} is not a function:`, typeof listener);
+        }
+      } catch (error) {
+        console.error(`Error in cart change listener ${index}:`, error);
+      }
+    });
+  }
 
   /**
    * Get all items in the cart
@@ -80,6 +106,7 @@ class CartService {
       cartItems.push(cartTest);
       await this.saveCartItems(cartItems);
       console.log('Added to cart:', test.name);
+      this.notifyCartChange(); // Notify listeners
       return true;
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -97,6 +124,7 @@ class CartService {
       const updatedItems = cartItems.filter(item => item.id !== normalizedTestId);
       await this.saveCartItems(updatedItems);
       console.log('Removed from cart:', testId);
+      this.notifyCartChange(); // Notify listeners
       return true;
     } catch (error) {
       console.error('Error removing from cart:', error);
@@ -157,6 +185,7 @@ class CartService {
     try {
       await AsyncStorage.removeItem(CART_STORAGE_KEY);
       console.log('Cart cleared');
+      this.notifyCartChange(); // Notify listeners
       return true;
     } catch (error) {
       console.error('Error clearing cart:', error);

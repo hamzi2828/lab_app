@@ -8,13 +8,13 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
-  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BRAND_GREEN } from "../../constants/Colors";
 import { styles } from "../../styles/cart/BookingSummaryPage.styles";
 import bookingService, { Address, DateItem } from "../../services/bookingService";
+import LoginRequiredModal from "../../components/LoginRequiredModal";
 
 const { width } = Dimensions.get('window');
 
@@ -277,67 +277,19 @@ const BookingSummaryPage = () => {
         </View>
       </ScrollView>
 
-      {/* Custom Login Required Modal */}
-      <Modal
+      {/* Login Required Modal */}
+      <LoginRequiredModal
         visible={showLoginModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowLoginModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.loginModalContainer}>
-            {/* Header */}
-            <View style={styles.loginModalHeader}>
-              <View style={styles.loginIconContainer}>
-                <Ionicons name="lock-closed" size={32} color={BRAND_GREEN} />
-              </View>
-              <Text style={styles.loginModalTitle}>Login Required</Text>
-              <Text style={styles.loginModalSubtitle}>
-                Please sign in to complete your booking
-              </Text>
-            </View>
-
-            {/* Content */}
-            <View style={styles.loginModalContent}>
-              <View style={styles.loginBenefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
-                <Text style={styles.loginBenefitText}>Your booking details will be saved</Text>
-              </View>
-              <View style={styles.loginBenefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
-                <Text style={styles.loginBenefitText}>Track your booking history</Text>
-              </View>
-              <View style={styles.loginBenefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={BRAND_GREEN} />
-                <Text style={styles.loginBenefitText}>Faster future bookings</Text>
-              </View>
-            </View>
-
-            {/* Actions */}
-            <View style={styles.loginModalActions}>
-              <TouchableOpacity
-                style={styles.loginCancelButton}
-                onPress={() => setShowLoginModal(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.loginCancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.loginConfirmButton}
-                onPress={() => {
-                  setShowLoginModal(false);
-                  router.push('/auth/LoginScreen?redirect=/cart/BookingSummaryPage');
-                }}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="log-in" size={18} color="#fff" />
-                <Text style={styles.loginConfirmButtonText}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowLoginModal(false)}
+        title="Login Required"
+        subtitle="Please sign in to complete your booking"
+        redirectPath="/cart/BookingSummaryPage"
+        benefits={[
+          "Your booking details will be saved",
+          "Track your booking history",
+          "Faster future bookings"
+        ]}
+      />
     </View>
   );
 };

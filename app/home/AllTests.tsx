@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from 'expo-linear-gradient';
 import TestSearchHeader, { TabKey } from "./TestSearchHeader";
 import { styles } from "../../styles/alltest/AllTests.styles";
 import { fetchAllTests, AllTest, Pagination, formatPrice, calculateDiscountedPrice } from "../../services/testsService";
@@ -19,6 +20,7 @@ const AllTests = () => {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [bookedTests, setBookedTests] = useState<number[]>([]);
+  const [cartCount, setCartCount] = useState<number>(0);
 
   const getTypeForTab = (tab: TabKey): string => {
     switch (tab) {
@@ -69,12 +71,32 @@ const AllTests = () => {
     loadTests(1);
   }, [activeTab]);
 
-  // Load booked tests when screen is focused
+  // Load booked tests and cart count when screen is focused
   useFocusEffect(
     React.useCallback(() => {
       loadBookedTests();
+      loadCartCount();
     }, [])
   );
+
+  // Setup cart change listener for real-time updates
+  useEffect(() => {
+    const updateCartData = () => {
+      loadBookedTests();
+      loadCartCount();
+    };
+
+    // Add listener for cart changes
+    cartService.addCartChangeListener(updateCartData);
+
+    // Initial load
+    updateCartData();
+
+    // Cleanup listener on unmount
+    return () => {
+      cartService.removeCartChangeListener(updateCartData);
+    };
+  }, []);
 
   const loadBookedTests = async () => {
     try {
@@ -82,6 +104,16 @@ const AllTests = () => {
       setBookedTests(bookedIds);
     } catch (error) {
       console.error('Error loading booked tests:', error);
+    }
+  };
+
+  const loadCartCount = async () => {
+    try {
+      const count = await cartService.getCartCount();
+      setCartCount(count);
+    } catch (error) {
+      console.error('Error loading cart count:', error);
+      setCartCount(0);
     }
   };
 
@@ -198,6 +230,27 @@ const AllTests = () => {
             Page {pagination.current_page} of {pagination.total_pages}
             ({pagination.total} total tests)
           </Text>
+        </View>
+      )}
+
+      {/* Proceed Button - Shows when cart has items */}
+      {cartCount > 0 && (
+        <View style={styles.proceedButtonContainer}>
+          <TouchableOpacity
+            onPress={() => router.push('/cart/Cart')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#3c5e45', '#0d9b1e']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.proceedButton}
+            >
+              <Text style={styles.proceedButtonText}>
+                Proceed ({cartCount} {cartCount === 1 ? 'test' : 'tests'})
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       )}
     </View>
