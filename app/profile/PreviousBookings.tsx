@@ -16,162 +16,31 @@ import { getUserData, isUserLoggedIn } from "../../services/loginValidation";
 
 interface Booking {
   id: number;
-  booking_reference: string;
-  booking_type: string;
-  status: string;
-  selected_time: string;
-  selected_date: number;
-  delivery_address: string;
-  delivery_address_type: string;
-  total_amount: string;
-  user_name: string;
-  user_email: string;
-  user_phone: string;
-  created_at: string;
-  updated_at: string;
-  tests: Test[];
+  booking_reference?: string;
+  booking_type?: string;
+  status?: string;
+  selected_time?: string;
+  selected_date?: number;
+  delivery_address?: string;
+  delivery_address_type?: string;
+  total_amount?: number | string;
+  user_name?: string;
+  user_email?: string;
+  user_phone?: string;
+  created_at?: string;
+  updated_at?: string;
+  tests?: Test[];
 }
 
 interface Test {
   id: number;
-  test_name: string;
-  test_code: string;
-  test_price: string;
-  test_category: string;
-  status: string;
+  test_name?: string;
+  test_code?: string;
+  test_price?: number | string;
+  test_category?: string;
+  status?: string;
 }
 
-// Static fallback data for better UI when API fails
-const staticBookings: Booking[] = [
-  {
-    id: 1,
-    booking_reference: "BK000001",
-    booking_type: "home_collection",
-    status: "confirmed",
-    selected_time: "10:00 AM - 12:00 PM",
-    selected_date: Math.floor(Date.now() / 1000) + 86400, // Tomorrow
-    delivery_address: "123 Main Street, Downtown Area, City Center, 12345",
-    delivery_address_type: "home",
-    total_amount: "2500.00",
-    user_name: "John Doe",
-    user_email: "john@example.com",
-    user_phone: "+923001234567",
-    created_at: "2024-01-15 10:30:00",
-    updated_at: "2024-01-15 15:00:00",
-    tests: [
-      {
-        id: 1,
-        test_name: "Complete Blood Count (CBC)",
-        test_code: "CBC001",
-        test_price: "1500.00",
-        test_category: "Hematology",
-        status: "pending"
-      },
-      {
-        id: 2,
-        test_name: "Blood Sugar Fasting",
-        test_code: "BSF001",
-        test_price: "500.00",
-        test_category: "Biochemistry",
-        status: "pending"
-      },
-      {
-        id: 3,
-        test_name: "Vitamin D Test",
-        test_code: "VTD001",
-        test_price: "500.00",
-        test_category: "Vitamins",
-        status: "pending"
-      }
-    ]
-  },
-  {
-    id: 2,
-    booking_reference: "BK000002",
-    booking_type: "lab_visit",
-    status: "completed",
-    selected_time: "2:00 PM - 4:00 PM",
-    selected_date: Math.floor(Date.now() / 1000) - 172800, // 2 days ago
-    delivery_address: "Lab Branch, Main Hospital, Medical District",
-    delivery_address_type: "lab",
-    total_amount: "3500.00",
-    user_name: "John Doe",
-    user_email: "john@example.com",
-    user_phone: "+923001234567",
-    created_at: "2024-01-13 14:20:00",
-    updated_at: "2024-01-14 16:30:00",
-    tests: [
-      {
-        id: 4,
-        test_name: "Lipid Profile",
-        test_code: "LP001",
-        test_price: "2000.00",
-        test_category: "Biochemistry",
-        status: "completed"
-      },
-      {
-        id: 5,
-        test_name: "Thyroid Profile",
-        test_code: "THY001",
-        test_price: "1500.00",
-        test_category: "Hormones",
-        status: "completed"
-      }
-    ]
-  },
-  {
-    id: 3,
-    booking_reference: "BK000003",
-    booking_type: "home_collection",
-    status: "pending",
-    selected_time: "9:00 AM - 11:00 AM",
-    selected_date: Math.floor(Date.now() / 1000) + 259200, // 3 days from now
-    delivery_address: "456 Oak Avenue, Residential Area, Suburb, 67890",
-    delivery_address_type: "home",
-    total_amount: "1200.00",
-    user_name: "John Doe",
-    user_email: "john@example.com",
-    user_phone: "+923001234567",
-    created_at: "2024-01-16 09:15:00",
-    updated_at: "2024-01-16 09:15:00",
-    tests: [
-      {
-        id: 6,
-        test_name: "COVID-19 RT-PCR",
-        test_code: "COV001",
-        test_price: "1200.00",
-        test_category: "Virology",
-        status: "pending"
-      }
-    ]
-  },
-  {
-    id: 4,
-    booking_reference: "BK000004",
-    booking_type: "home_collection",
-    status: "cancelled",
-    selected_time: "3:00 PM - 5:00 PM",
-    selected_date: Math.floor(Date.now() / 1000) - 86400, // Yesterday
-    delivery_address: "789 Pine Street, Business District, Metro City, 54321",
-    delivery_address_type: "office",
-    total_amount: "800.00",
-    user_name: "John Doe",
-    user_email: "john@example.com",
-    user_phone: "+923001234567",
-    created_at: "2024-01-12 11:45:00",
-    updated_at: "2024-01-12 13:20:00",
-    tests: [
-      {
-        id: 7,
-        test_name: "Urine Analysis",
-        test_code: "URN001",
-        test_price: "800.00",
-        test_category: "Pathology",
-        status: "cancelled"
-      }
-    ]
-  }
-];
 
 const PreviousBookings = () => {
   const router = useRouter();
@@ -180,7 +49,6 @@ const PreviousBookings = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -189,7 +57,6 @@ const PreviousBookings = () => {
   const fetchBookings = async () => {
     try {
       setError(null);
-      setIsUsingFallback(false);
 
       const loggedIn = await isUserLoggedIn();
 
@@ -210,23 +77,24 @@ const PreviousBookings = () => {
 
       const response = await bookingService.getUserBookings(user.user_id);
 
+      console.log("=== API Response Debug ===");
+      console.log("Response success:", response.success);
+      console.log("Response message:", response.message);
+      console.log("Response data:", JSON.stringify(response.data, null, 2));
+      console.log("Response count:", response.count);
+
       if (response.success) {
-        setBookings(response.data || []);
-        setIsUsingFallback(false);
+        const bookings = response.data || [];
+        console.log("Setting bookings:", bookings.length, "items");
+        setBookings(bookings);
       } else {
-        // API failed, use static fallback data
-        console.log("API failed, using static fallback data");
-        setBookings(staticBookings);
-        setIsUsingFallback(true);
-        setError(null); // Clear error to show fallback data instead
+        setError(response.message || "Failed to load bookings");
+        setBookings([]);
       }
     } catch (error) {
       console.error("Error fetching bookings:", error);
-      // Network/connection error, use static fallback data
-      console.log("Network error, using static fallback data");
-      setBookings(staticBookings);
-      setIsUsingFallback(true);
-      setError(null); // Clear error to show fallback data instead
+      setError("Unable to connect to server. Please check your internet connection.");
+      setBookings([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -299,12 +167,14 @@ const PreviousBookings = () => {
   };
 
   const renderBookingCard = (booking: Booking) => {
-    const statusColor = bookingService.getStatusColor(booking.status);
-    const formattedDate = bookingService.formatBookingDate(booking.selected_date);
-    const timeRemaining = bookingService.getTimeRemaining(
-      booking.selected_date,
-      booking.selected_time
-    );
+    const status = booking.status || 'pending';
+    const statusColor = bookingService.getStatusColor(status);
+    const formattedDate = booking.selected_date
+      ? bookingService.formatBookingDate(booking.selected_date)
+      : 'Date not available';
+    const timeRemaining = booking.selected_date && booking.selected_time
+      ? bookingService.getTimeRemaining(booking.selected_date, booking.selected_time)
+      : 'Time not available';
 
     return (
       <TouchableOpacity
@@ -315,14 +185,16 @@ const PreviousBookings = () => {
       >
         <View style={styles.bookingHeader}>
           <View style={styles.referenceContainer}>
-            <Text style={styles.bookingReference}>{booking.booking_reference}</Text>
+            <Text style={styles.bookingReference}>
+              {booking.booking_reference || `Booking #${booking.id}`}
+            </Text>
             <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
               <MaterialIcons
-                name={getStatusIcon(booking.status)}
+                name={getStatusIcon(status)}
                 size={14}
                 color="#fff"
               />
-              <Text style={styles.statusText}>{booking.status.toUpperCase()}</Text>
+              <Text style={styles.statusText}>{status.toUpperCase()}</Text>
             </View>
           </View>
           <MaterialIcons name="keyboard-arrow-right" size={24} color="#777" />
@@ -336,8 +208,8 @@ const PreviousBookings = () => {
 
           <View style={styles.infoRow}>
             <MaterialIcons name="access-time" size={16} color="#666" />
-            <Text style={styles.infoText}>{booking.selected_time}</Text>
-            {booking.status !== "completed" && booking.status !== "cancelled" && (
+            <Text style={styles.infoText}>{booking.selected_time || 'Time not available'}</Text>
+            {status !== "completed" && status !== "cancelled" && timeRemaining !== 'Time not available' && (
               <Text style={styles.timeRemaining}>• {timeRemaining}</Text>
             )}
           </View>
@@ -345,23 +217,28 @@ const PreviousBookings = () => {
           <View style={styles.infoRow}>
             <MaterialIcons name="location-on" size={16} color="#666" />
             <Text style={styles.infoText} numberOfLines={1}>
-              {booking.delivery_address}
+              {booking.delivery_address || 'Address not available'}
             </Text>
           </View>
 
           <View style={styles.testsContainer}>
             <Text style={styles.testsLabel}>
-              Tests ({booking.tests.length}):
+              Tests ({booking.tests?.length || 0}):
             </Text>
             <Text style={styles.testsList} numberOfLines={2}>
-              {booking.tests.map((test) => test.test_name).join(", ")}
+              {booking.tests?.length
+                ? booking.tests.map((test) => test.test_name || 'Unknown Test').join(", ")
+                : 'No tests listed'
+              }
             </Text>
           </View>
 
           <View style={styles.bookingFooter}>
-            <Text style={styles.totalAmount}>₹{booking.total_amount}</Text>
+            <Text style={styles.totalAmount}>
+              ₹{booking.total_amount ? Number(booking.total_amount).toFixed(2) : "0.00"}
+            </Text>
             <Text style={styles.bookingType}>
-              {booking.booking_type.replace("_", " ").toUpperCase()}
+              {booking.booking_type ? booking.booking_type.replace("_", " ").toUpperCase() : 'BOOKING'}
             </Text>
           </View>
         </View>
@@ -406,26 +283,10 @@ const PreviousBookings = () => {
           renderEmptyState()
         ) : (
           <>
-            {isUsingFallback && (
-              <View style={styles.fallbackBanner}>
-                <MaterialIcons name="info" size={16} color="#ff9800" />
-                <Text style={styles.fallbackText}>
-                  Showing sample data. Unable to connect to server.
-                </Text>
-                <TouchableOpacity onPress={fetchBookings} style={styles.retryIconButton}>
-                  <MaterialIcons name="refresh" size={16} color="#ff9800" />
-                </TouchableOpacity>
-              </View>
-            )}
             <View style={styles.summaryContainer}>
               <Text style={styles.summaryText}>
-                {isUsingFallback ? "Sample Bookings" : "Total Bookings"}: {bookings.length}
+                Total Bookings: {bookings.length}
               </Text>
-              {isUsingFallback && (
-                <Text style={styles.fallbackNote}>
-                  This is demo data for UI preview
-                </Text>
-              )}
             </View>
             {bookings.map(renderBookingCard)}
           </>
