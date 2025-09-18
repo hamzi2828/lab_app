@@ -117,11 +117,7 @@ const Cart = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.orderSummary}>
-          <Text style={styles.summaryText}>Subtotals</Text>
-          <Text style={styles.summaryText}>Rs.{cartTotal.toFixed(2)}</Text>
-        </View>
-        <View style={styles.orderSummary}>
-          <Text style={[styles.summaryText, styles.totalText]}>Totals</Text>
+          <Text style={[styles.summaryText, styles.totalText]}>Total Amount</Text>
           <Text style={[styles.summaryText, styles.totalText]}>Rs.{(cartTotal + 8).toFixed(2)}</Text>
         </View>
         <View style={styles.actionBar}>

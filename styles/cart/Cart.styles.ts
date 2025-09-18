@@ -59,6 +59,7 @@ export const styles = StyleSheet.create({
   },
   totalText: {
     fontWeight: "bold",
+    fontSize: 20,
   },
   continueButton: {
     backgroundColor: "#4CAF50",

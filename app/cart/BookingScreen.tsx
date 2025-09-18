@@ -288,7 +288,7 @@ const BookingScreen = () => {
         {/* Address Selection */}
         <View style={styles.addressContainer}>
           <View style={styles.addressHeader}>
-            <Text style={styles.addressTitle}>Delivery Address / ڈیلیوری ایڈریس</Text>
+            <Text style={styles.addressTitle}>Location Address / مکمل پتہ</Text>
             <TouchableOpacity onPress={handleEditLocation}>
               <Text style={styles.changeAddressText}>
                 {selectedAddress ? 'Change' : 'Select'} <Ionicons name="chevron-forward" size={16} color={BRAND_GREEN} />
@@ -306,7 +306,7 @@ const BookingScreen = () => {
           ) : (
             <TouchableOpacity style={styles.selectAddressPrompt} onPress={handleEditLocation}>
               <Ionicons name="location-outline" size={24} color={BRAND_GREEN} />
-              <Text style={styles.selectAddressPromptText}>Tap to select delivery address</Text>
+              <Text style={styles.selectAddressPromptText}>Tap to select Location</Text>
             </TouchableOpacity>
           )}
         </View>
