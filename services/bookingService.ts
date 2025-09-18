@@ -732,6 +732,125 @@ class BookingService {
       setLocationLoading(false);
     }
   }
+
+  // Fetch user bookings from API
+  async getUserBookings(userId: string | number): Promise<{
+    success: boolean;
+    data?: any[];
+    message?: string;
+    count?: number;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/get-user-bookings?user_id=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const responseText = await response.text();
+
+      // Check if it's HTML error page
+      if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+        throw new Error('Service temporarily unavailable.');
+      }
+
+      // Parse JSON response
+      let result: any;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error('Invalid response from server');
+      }
+
+      if (response.ok && result.success) {
+        return {
+          success: true,
+          data: result.data || [],
+          count: result.count || 0,
+          message: result.message
+        };
+      } else {
+        return {
+          success: false,
+          message: result.message || 'Failed to fetch bookings',
+          data: []
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching user bookings:', error);
+
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        return {
+          success: false,
+          message: 'Cannot connect to server. Please check your internet connection.',
+          data: []
+        };
+      }
+
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to fetch bookings',
+        data: []
+      };
+    }
+  }
+
+  // Format booking date for display
+  formatBookingDate(timestamp: number): string {
+    const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // Get status color for booking status
+  getStatusColor(status: string): string {
+    const statusColors: { [key: string]: string } = {
+      pending: '#FFA500',
+      confirmed: '#4CAF50',
+      completed: '#2196F3',
+      cancelled: '#F44336',
+      in_progress: '#9C27B0'
+    };
+    return statusColors[status.toLowerCase()] || '#757575';
+  }
+
+  // Calculate time remaining for a booking
+  getTimeRemaining(timestamp: number, time: string): string {
+    const now = new Date();
+    const bookingDate = new Date(timestamp * 1000);
+
+    // Parse time slot to get actual time
+    const timeMatch = time.match(/(\d+):(\d+)\s*(AM|PM)/);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const period = timeMatch[3];
+
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+
+      bookingDate.setHours(hours, minutes, 0, 0);
+    }
+
+    const diff = bookingDate.getTime() - now.getTime();
+
+    if (diff < 0) return 'Past';
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} remaining`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} remaining`;
+
+    return 'Today';
+  }
 }
 
 export default new BookingService();

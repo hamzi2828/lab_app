@@ -102,4 +102,11 @@ export const styles = StyleSheet.create({
     color: "#0d9b1e",
     fontWeight: "600",
   },
+  disabledOption: {
+    opacity: 0.5,
+    backgroundColor: "#f5f5f5",
+  },
+  disabledText: {
+    color: "#999",
+  },
 });

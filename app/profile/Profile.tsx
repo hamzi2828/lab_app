@@ -123,11 +123,12 @@ const Profile = () => {
         <MaterialIcons name="keyboard-arrow-right" size={24} color="#777" />
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.option}
-        onPress={() => router.push("/profile/ChangePaymentMethods")}
+        style={[styles.option, !isLoggedIn && styles.disabledOption]}
+        onPress={() => isLoggedIn ? router.push("/profile/PreviousBookings") : null}
+        disabled={!isLoggedIn}
       >
-        <Text style={styles.optionText}>Payment</Text>
-        <MaterialIcons name="keyboard-arrow-right" size={24} color="#777" />
+        <Text style={[styles.optionText, !isLoggedIn && styles.disabledText]}>Previous Bookings</Text>
+        <MaterialIcons name="keyboard-arrow-right" size={24} color={isLoggedIn ? "#777" : "#ccc"} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.option}>
         <Text style={styles.optionText}>Help</Text>
