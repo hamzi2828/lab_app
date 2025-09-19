@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserData, isUserLoggedIn } from './loginValidation';
+import loginModalService from './loginModalService';
 
 // Address interfaces
 export interface UserAddress {
@@ -439,9 +440,10 @@ class AddressService {
   ): Promise<AddressResponse> {
     const userId = await this.getCurrentUserId();
     if (!userId) {
+      loginModalService.showForAddresses('add addresses');
       return {
-        success: false,
-        message: 'Please log in to add addresses',
+        success: true,
+        message: 'Login modal shown',
       };
     }
 
@@ -457,9 +459,10 @@ class AddressService {
   async getCurrentUserAddresses(addressType?: 'home' | 'work' | 'other'): Promise<AddressResponse> {
     const userId = await this.getCurrentUserId();
     if (!userId) {
+      loginModalService.showForAddresses('view addresses');
       return {
-        success: false,
-        message: 'Please log in to view addresses',
+        success: true,
+        message: 'Login modal shown',
         data: []
       };
     }
@@ -471,9 +474,10 @@ class AddressService {
   async deleteAddressForCurrentUser(addressId: number): Promise<AddressResponse> {
     const userId = await this.getCurrentUserId();
     if (!userId) {
+      loginModalService.showForAddresses('delete addresses');
       return {
-        success: false,
-        message: 'Please log in to delete addresses',
+        success: true,
+        message: 'Login modal shown',
       };
     }
 
@@ -484,9 +488,10 @@ class AddressService {
   async setDefaultAddressForCurrentUser(addressId: number): Promise<AddressResponse> {
     const userId = await this.getCurrentUserId();
     if (!userId) {
+      loginModalService.showForAddresses('set default address');
       return {
-        success: false,
-        message: 'Please log in to set default address',
+        success: true,
+        message: 'Login modal shown',
       };
     }
 

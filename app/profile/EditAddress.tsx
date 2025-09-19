@@ -17,6 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import addressService, { UserAddress } from "../../services/addressService";
 import { isUserLoggedIn, getUserData } from "../../services/loginValidation";
 import * as Location from 'expo-location';
+import loginModalService from "../../services/loginModalService";
 
 const EditAddress = () => {
   const router = useRouter();
@@ -141,7 +142,7 @@ const EditAddress = () => {
 
   const handleSave = async () => {
     if (!isLoggedIn) {
-      Alert.alert('Error', 'Please log in to save addresses');
+      loginModalService.showForAddresses('save addresses');
       return;
     }
 

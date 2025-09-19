@@ -152,9 +152,6 @@ const BookingSummaryPage = () => {
                 styles.testItem,
                 index === bookedTests.length - 1 && styles.lastTestItem
               ]}>
-                <View style={styles.testIconContainer}>
-                  <Ionicons name="medical" size={18} color={BRAND_GREEN} />
-                </View>
                 <View style={styles.testInfo}>
                   <Text style={styles.testName}>{test.name}</Text>
                   <Text style={styles.testDescription}>{test.description}</Text>

@@ -106,7 +106,7 @@ const BookingScreen = () => {
         newAddress.is_default
       );
 
-      if (result.success) {
+      if (result.success && result.message !== 'Login modal shown') {
         Alert.alert('Success', 'Address saved successfully!');
         setShowNewAddressForm(false);
         setShowAddressModal(false);
@@ -117,6 +117,9 @@ const BookingScreen = () => {
         });
         // Reload addresses
         await loadUserAddresses();
+      } else if (result.success && result.message === 'Login modal shown') {
+        // Login modal is being shown, don't show success message
+        return;
       } else {
         Alert.alert('Error', result.message || 'Failed to save address');
       }

@@ -62,6 +62,7 @@ export const styles = StyleSheet.create({
     color: "#888",
     marginTop: 2,
     textTransform: "capitalize",
+    marginLeft: 5,
   },
   loadingContainer: {
     flex: 1,
@@ -90,6 +91,7 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
   },
   paginationInfo: {
+    display: "none",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: "#f8f9fa",
@@ -105,6 +107,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
+    marginLeft: 5,
   },
   originalPrice: {
     fontSize: 11,

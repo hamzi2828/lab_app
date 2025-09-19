@@ -202,7 +202,6 @@ const AllTests = () => {
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.title}>{item.name}</Text>
-                  <Text style={styles.code}>{item.code}</Text>
                   <Text style={styles.category}>{item.category}</Text>
                   <View style={styles.priceRow}>
                     <Text style={styles.originalPrice}>Rs {item.price.toLocaleString()}</Text>

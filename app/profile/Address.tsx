@@ -15,6 +15,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import addressService, { UserAddress } from "../../services/addressService";
 import { isUserLoggedIn, getUserData } from "../../services/loginValidation";
+import loginModalService from "../../services/loginModalService";
 
 const Address = () => {
   const router = useRouter();
@@ -51,11 +52,12 @@ const Address = () => {
       const result = await addressService.getCurrentUserAddresses();
       if (result.success && Array.isArray(result.data)) {
         setAddresses(result.data);
+      } else if (result.success && result.message === 'Login modal shown') {
+        // Login modal is being shown, don't show error alert
+        setAddresses([]);
       } else {
         console.error('Failed to load addresses:', result.message);
-        if (result.message !== 'Please log in to view addresses') {
-          Alert.alert('Error', result.message || 'Failed to load addresses');
-        }
+        Alert.alert('Error', result.message || 'Failed to load addresses');
         setAddresses([]);
       }
     } catch (error) {

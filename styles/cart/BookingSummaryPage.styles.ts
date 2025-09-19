@@ -155,12 +155,12 @@ export const styles = StyleSheet.create({
   },
   // Tests Container
   testsContainer: {
-    marginBottom: 16,
+    marginBottom: 5,
   },
   testItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
+    alignItems: 'flex-start',
+    paddingVertical: 1,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f2f5',
   },
@@ -168,23 +168,25 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   testIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 15,
+    height: 15,
+    borderRadius: 0,
     backgroundColor: `${BRAND_GREEN}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    marginBottom: 10,
   },
   testInfo: {
     flex: 1,
     marginRight: 12,
+    flexShrink: 1,
   },
   testName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#1a1a1a',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   testDescription: {
     fontSize: 14,
@@ -192,10 +194,12 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
   priceContainer: {
-    alignItems: 'flex-end',
+    marginLeft: 'auto',
+    paddingLeft: 12,
+    alignSelf: 'flex-start',
   },
   testPrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: BRAND_GREEN,
   },
