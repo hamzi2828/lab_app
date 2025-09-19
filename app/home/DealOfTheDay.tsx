@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LinearGradient } from 'expo-linear-gradient';
 
 const DealOfTheDay = () => {
   const router = useRouter();
@@ -11,15 +12,20 @@ const DealOfTheDay = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#3c5e45', '#0d9b1e']}
+      start={{ x: 0, y: 0.5 }}
+      end={{ x: 1, y: 0.5 }}
+      style={styles.container}
+    >
       <View style={styles.textContainer}>
-        <Text style={styles.title}> Citi Lab Health Watch</Text>
+        <Text style={styles.title}> Citi Lab Health</Text>
       </View>
       <TouchableOpacity style={styles.button} onPress={handleViewAll}>
         <Text style={styles.buttonText}>View all</Text>
         <Ionicons name="arrow-forward-outline" size={16} color="#16A34A" />
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -28,7 +34,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#16A34A",
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 20,

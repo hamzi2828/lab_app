@@ -190,8 +190,11 @@ const Profile = () => {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.editProfileButton}>
-              <MaterialIcons name="edit" size={20} color="#0d9b1e" />
+            <TouchableOpacity
+              style={styles.editProfileButton}
+              onPress={() => router.push("/profile/ProfileDetailsScreen")}
+            >
+              <MaterialIcons name="visibility" size={20} color="#0d9b1e" />
             </TouchableOpacity>
           </View>
         ) : !loading && (
