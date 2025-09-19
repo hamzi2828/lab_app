@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
+  Modal,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+import forgotPasswordService from "../../services/forgotPasswordService";
 
 const NewPasswordScreen = () => {
   const router = useRouter();
@@ -19,10 +22,40 @@ const NewPasswordScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [storedOTP, setStoredOTP] = useState("");
   const [errors, setErrors] = useState({
     newPassword: "",
     confirmPassword: "",
   });
+
+  useEffect(() => {
+    checkPasswordResetFlow();
+  }, []);
+
+  const checkPasswordResetFlow = async () => {
+    try {
+      const email = await forgotPasswordService.getStoredEmail();
+      const step = await forgotPasswordService.getCurrentStep();
+
+      if (!email || step !== 'password') {
+        // User hasn't completed OTP verification
+        Alert.alert("Error", "Please complete OTP verification first.", [
+          { text: "OK", onPress: () => router.replace("/auth/OTPVerificationScreen") }
+        ]);
+        return;
+      }
+
+      setUserEmail(email);
+    } catch (error) {
+      console.error("Error checking password reset flow:", error);
+      Alert.alert("Error", "Session expired. Please start over.", [
+        { text: "OK", onPress: () => router.replace("/auth/ForgotPasswordScreen") }
+      ]);
+    }
+  };
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
@@ -55,22 +88,48 @@ const NewPasswordScreen = () => {
     return !newErrors.newPassword && !newErrors.confirmPassword;
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!validateForm()) {
       return;
     }
 
-    // For UI demo - simulate password reset success
-    Alert.alert(
-      "Password Reset Successful",
-      "Your password has been reset successfully. You can now login with your new password.",
-      [
-        {
-          text: "Go to Login",
-          onPress: () => router.replace("/auth/LoginScreen")
-        }
-      ]
-    );
+    setLoading(true);
+
+    try {
+      // Get stored data from previous steps
+      const storedData = await forgotPasswordService.getStoredData();
+
+      if (!storedData || !storedData.otp || !storedData.email) {
+        Alert.alert("Error", "Session expired. Please start over.", [
+          { text: "OK", onPress: () => router.replace("/auth/ForgotPasswordScreen") }
+        ]);
+        return;
+      }
+
+      // Use the API service to change password with OTP verification
+      const response = await forgotPasswordService.verifyOTPAndChangePassword(
+        storedData.otp,
+        newPassword,
+        confirmPassword,
+        storedData.email
+      );
+
+      if (response.success) {
+        setShowSuccessModal(true);
+      } else {
+        Alert.alert("Error", response.message || "Failed to reset password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Password reset error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSuccessModalOK = () => {
+    setShowSuccessModal(false);
+    router.replace("/auth/LoginScreen");
   };
 
   return (
@@ -178,16 +237,58 @@ const NewPasswordScreen = () => {
         </View>
       </View>
 
-      <TouchableOpacity onPress={handleResetPassword}>
+      <TouchableOpacity onPress={handleResetPassword} disabled={loading}>
         <LinearGradient
-          colors={['#3c5e45', '#0d9b1e']}
+          colors={loading ? ['#ccc', '#999'] : ['#3c5e45', '#0d9b1e']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={styles.resetButton}
+          style={[styles.resetButton, loading && styles.resetButtonDisabled]}
         >
-          <Text style={styles.resetButtonText}>Reset Password</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.resetButtonText}>Resetting...</Text>
+            </View>
+          ) : (
+            <Text style={styles.resetButtonText}>Reset Password</Text>
+          )}
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIcon}>
+              <MaterialIcons name="check-circle" size={48} color="#0d9b1e" />
+            </View>
+
+            <Text style={styles.modalTitle}>Password Reset Successful!</Text>
+            <Text style={styles.modalMessage}>
+              Your password has been reset successfully.
+            </Text>
+            <Text style={styles.modalSubMessage}>
+              You can now login with your new password.
+            </Text>
+
+            <TouchableOpacity onPress={handleSuccessModalOK}>
+              <LinearGradient
+                colors={['#3c5e45', '#0d9b1e']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.modalButton}
+              >
+                <Text style={styles.modalButtonText}>Go to Login</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -274,9 +375,78 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginVertical: 16,
   },
+  resetButtonDisabled: {
+    opacity: 0.7,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   resetButtonText: {
     color: "#fff",
     fontSize: 18,
+    fontWeight: "600",
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 30,
+    alignItems: "center",
+    marginHorizontal: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f0fff4",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  modalSubMessage: {
+    fontSize: 14,
+    color: "#888",
+    textAlign: "center",
+    marginBottom: 30,
+    lineHeight: 20,
+  },
+  modalButton: {
+    borderRadius: 25,
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 140,
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
     fontWeight: "600",
   },
 });

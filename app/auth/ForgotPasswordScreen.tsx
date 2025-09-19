@@ -9,24 +9,67 @@ import {
   Platform,
   Alert,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+import forgotPasswordService from "../../services/forgotPasswordService";
 
 const ForgotPasswordScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: "" });
 
-  const handleSendOTP = () => {
-    if (!email.trim()) {
-      Alert.alert("Error", "Please enter your email address");
-      return;
+  const handleSendOTP = async () => {
+    setLoading(true);
+    setErrors({ email: "" });
+
+    try {
+      // Validate email
+      if (!email.trim()) {
+        setErrors({ email: "Please enter your email address" });
+        setLoading(false);
+        return;
+      }
+
+      if (!forgotPasswordService.validateEmail(email)) {
+        setErrors({ email: "Please enter a valid email address" });
+        setLoading(false);
+        return;
+      }
+
+      // Step 1: Check if user exists
+      const userDetailsResponse = await forgotPasswordService.getUserDetails(email);
+      if (!userDetailsResponse.success) {
+        Alert.alert("Error", userDetailsResponse.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!userDetailsResponse.data?.exists) {
+        Alert.alert("User Not Found", "No account found with this email address");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Send OTP
+      const sendOTPResponse = await forgotPasswordService.sendOTP(email);
+      if (!sendOTPResponse.success) {
+        Alert.alert("Error", sendOTPResponse.message);
+        setLoading(false);
+        return;
+      }
+
+      // Show success modal
+      setShowModal(true);
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // For UI demo - show modal
-    setShowModal(true);
   };
 
   const handleModalOK = () => {
@@ -42,25 +85,41 @@ const ForgotPasswordScreen = () => {
       <Text style={styles.title}>Forgot Password</Text>
       <Text style={styles.subtitle}>Enter your email address to receive a verification code</Text>
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, errors.email && styles.inputContainerError]}>
         <TextInput
           style={styles.input}
           placeholder="Enter Email Address"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (errors.email) {
+              setErrors({ email: "" });
+            }
+          }}
           keyboardType="email-address"
           autoCapitalize="none"
+          editable={!loading}
         />
       </View>
+      {errors.email ? (
+        <Text style={styles.errorText}>{errors.email}</Text>
+      ) : null}
 
-      <TouchableOpacity onPress={handleSendOTP}>
+      <TouchableOpacity onPress={handleSendOTP} disabled={loading}>
         <LinearGradient
-          colors={['#3c5e45', '#0d9b1e']}
+          colors={loading ? ['#ccc', '#999'] : ['#3c5e45', '#0d9b1e']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={styles.continueButton}
+          style={[styles.continueButton, loading && styles.continueButtonDisabled]}
         >
-          <Text style={styles.continueButtonText}>Send OTP</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.continueButtonText}>Sending...</Text>
+            </View>
+          ) : (
+            <Text style={styles.continueButtonText}>Send OTP</Text>
+          )}
         </LinearGradient>
       </TouchableOpacity>
 
@@ -125,13 +184,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#E1E0E0",
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 4,
     paddingHorizontal: 16,
     height: 50,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  inputContainerError: {
+    backgroundColor: "#FFEBEE",
+    borderColor: "#F44336",
   },
   input: {
     flex: 1,
     fontSize: 16,
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#F44336",
+    marginBottom: 12,
+    marginLeft: 4,
   },
   continueButton: {
     borderRadius: 25,
@@ -139,6 +210,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 16,
+  },
+  continueButtonDisabled: {
+    opacity: 0.7,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   continueButtonText: {
     color: "#fff",

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,16 +9,41 @@ import {
   Platform,
   Alert,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+import forgotPasswordService from "../../services/forgotPasswordService";
 
 const OTPVerificationScreen = () => {
   const router = useRouter();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    loadStoredEmail();
+  }, []);
+
+  const loadStoredEmail = async () => {
+    try {
+      const email = await forgotPasswordService.getStoredEmail();
+      if (email) {
+        setUserEmail(email);
+      } else {
+        // No stored email, redirect back to forgot password screen
+        Alert.alert("Error", "Session expired. Please start over.", [
+          { text: "OK", onPress: () => router.replace("/auth/ForgotPasswordScreen") }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error loading stored email:", error);
+    }
+  };
 
   const handleOTPChange = (value: string, index: number) => {
     if (value.length > 1) return; // Only allow single digit
@@ -39,19 +64,32 @@ const OTPVerificationScreen = () => {
     }
   };
 
-  const handleVerifyOTP = () => {
+  const handleVerifyOTP = async () => {
     const otpValue = otp.join("");
+    setLoading(true);
 
-    if (otpValue.length !== 4) {
-      Alert.alert("Error", "Please enter the 4-digit OTP");
-      return;
-    }
+    try {
+      if (otpValue.length !== 4) {
+        Alert.alert("Error", "Please enter the 4-digit OTP");
+        setLoading(false);
+        return;
+      }
 
-    // For UI demo - check if OTP is 1234
-    if (otpValue === "1234") {
-      setShowSuccessModal(true);
-    } else {
-      Alert.alert("Error", "Invalid OTP. Please try again.");
+      const response = await forgotPasswordService.verifyOTP(otpValue);
+
+      if (response.success && response.data?.otp_valid) {
+        setShowSuccessModal(true);
+      } else {
+        Alert.alert("Error", response.message || "Invalid OTP. Please try again.");
+        // Clear OTP on error
+        setOtp(["", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      }
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+      console.error("OTP verification error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,10 +98,25 @@ const OTPVerificationScreen = () => {
     router.push("/auth/NewPasswordScreen");
   };
 
-  const handleResendOTP = () => {
-    Alert.alert("OTP Sent", "New verification code sent to your email");
-    setOtp(["", "", "", ""]);
-    inputRefs.current[0]?.focus();
+  const handleResendOTP = async () => {
+    setResendLoading(true);
+
+    try {
+      const response = await forgotPasswordService.sendOTP();
+
+      if (response.success) {
+        Alert.alert("OTP Sent", "New verification code sent to your email");
+        setOtp(["", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else {
+        Alert.alert("Error", response.message || "Failed to resend OTP. Please try again.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to resend OTP. Please try again.");
+      console.error("Resend OTP error:", error);
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   return (
@@ -73,8 +126,11 @@ const OTPVerificationScreen = () => {
     >
       <Text style={styles.title}>Enter Verification Code</Text>
       <Text style={styles.subtitle}>
-        We've sent a 4-digit verification code to your email address
+        We've sent a 4-digit verification code to
       </Text>
+      {userEmail && (
+        <Text style={styles.emailText}>{userEmail}</Text>
+      )}
 
       <View style={styles.otpContainer}>
         {otp.map((digit, index) => (
@@ -93,20 +149,36 @@ const OTPVerificationScreen = () => {
         ))}
       </View>
 
-      <TouchableOpacity onPress={handleVerifyOTP}>
+      <TouchableOpacity onPress={handleVerifyOTP} disabled={loading}>
         <LinearGradient
-          colors={['#3c5e45', '#0d9b1e']}
+          colors={loading ? ['#ccc', '#999'] : ['#3c5e45', '#0d9b1e']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={styles.verifyButton}
+          style={[styles.verifyButton, loading && styles.verifyButtonDisabled]}
         >
-          <Text style={styles.verifyButtonText}>Verify OTP</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.verifyButtonText}>Verifying...</Text>
+            </View>
+          ) : (
+            <Text style={styles.verifyButtonText}>Verify OTP</Text>
+          )}
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleResendOTP} style={styles.resendButton}>
+      <TouchableOpacity
+        onPress={handleResendOTP}
+        style={styles.resendButton}
+        disabled={resendLoading}
+      >
         <Text style={styles.resendText}>Didn't receive the code? </Text>
-        <Text style={styles.resendLink}>Resend OTP</Text>
+        <Text style={[styles.resendLink, resendLoading && styles.resendLinkDisabled]}>
+          {resendLoading ? "Sending..." : "Resend OTP"}
+        </Text>
+        {resendLoading && (
+          <ActivityIndicator size="small" color="#0d9b1e" style={styles.resendLoader} />
+        )}
       </TouchableOpacity>
 
       {/* Success Modal */}
@@ -164,9 +236,16 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 40,
+    marginBottom: 8,
     alignSelf: "flex-start",
     lineHeight: 24,
+  },
+  emailText: {
+    fontSize: 16,
+    color: "#0d9b1e",
+    fontWeight: "600",
+    marginBottom: 32,
+    alignSelf: "flex-start",
   },
   otpContainer: {
     flexDirection: "row",
@@ -196,6 +275,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginVertical: 16,
   },
+  verifyButtonDisabled: {
+    opacity: 0.7,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   verifyButtonText: {
     color: "#fff",
     fontSize: 18,
@@ -215,6 +302,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#0d9b1e",
     fontWeight: "600",
+  },
+  resendLinkDisabled: {
+    color: "#ccc",
+  },
+  resendLoader: {
+    marginLeft: 8,
   },
   // Modal styles
   modalOverlay: {
