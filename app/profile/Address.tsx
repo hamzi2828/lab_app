@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LinearGradient } from 'expo-linear-gradient';
 import addressService, { UserAddress } from "../../services/addressService";
 import { isUserLoggedIn, getUserData } from "../../services/loginValidation";
 import loginModalService from "../../services/loginModalService";
@@ -186,11 +187,17 @@ const Address = () => {
         Please sign in to manage your addresses
       </Text>
       <TouchableOpacity
-        style={styles.signInButton}
         onPress={() => router.push('/auth/LoginScreen')}
       >
-        <MaterialIcons name="login" size={20} color="#fff" />
-        <Text style={styles.signInButtonText}>Sign In</Text>
+        <LinearGradient
+          colors={['#3c5e45', '#0d9b1e']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.signInButton}
+        >
+          <MaterialIcons name="login" size={20} color="#fff" />
+          <Text style={styles.signInButtonText}>Sign In</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -254,11 +261,17 @@ const Address = () => {
           {/* Add Address Button (only for logged in users) */}
           {isLoggedIn && (
             <TouchableOpacity
-              style={styles.addAddressButton}
               onPress={() => router.push('/profile/EditAddress')}
             >
-              <MaterialIcons name="add" size={24} color="#0d9b1e" />
-              <Text style={styles.addAddressText}>Add New Address</Text>
+              <LinearGradient
+                colors={['#3c5e45', '#0d9b1e']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.addAddressButton}
+              >
+                <MaterialIcons name="add" size={24} color="#fff" />
+                <Text style={styles.addAddressText}>Add New Address</Text>
+              </LinearGradient>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -426,7 +439,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0d9b1e",
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 25,
   },
   signInButtonText: {
     color: "#fff",
@@ -458,17 +471,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8f8f8",
-    borderWidth: 2,
-    borderColor: "#0d9b1e",
-    borderStyle: "dashed",
     paddingVertical: 24,
     marginHorizontal: 16,
     marginBottom: 24,
-    borderRadius: 12,
+    borderRadius: 25,
   },
   addAddressText: {
-    color: "#0d9b1e",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,

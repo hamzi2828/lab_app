@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView, StatusBar } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from "../../styles/profile/Profile.styles";
 import { getUserData, isUserLoggedIn, logoutUser } from "../../services/loginValidation";
 import { clearAllAsyncStorage } from "../../services/assetsService";
@@ -201,12 +202,18 @@ const Profile = () => {
             <Text style={styles.guestTitle}>Welcome to Lab App</Text>
             <Text style={styles.guestSubtitle}>Sign in to access your profile and booking history</Text>
             <TouchableOpacity
-              style={styles.guestSignInButton}
               onPress={() => router.push("/auth/LoginScreen")}
               activeOpacity={0.8}
             >
-              <MaterialIcons name="login" size={20} color="#fff" />
-              <Text style={styles.guestSignInButtonText}>Sign In</Text>
+              <LinearGradient
+                colors={['#3c5e45', '#0d9b1e']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.guestSignInButton}
+              >
+                <MaterialIcons name="login" size={20} color="#fff" />
+                <Text style={styles.guestSignInButtonText}>Sign In</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         )}
