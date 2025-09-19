@@ -120,8 +120,9 @@ const AllTests = () => {
   const handleBookPress = async (test: AllTest) => {
     try {
       const originalPrice = formatPrice(test.price);
-      const discountedPrice = calculateDiscountedPrice(test.price, 20);
-      const badges = ['20% off'];
+      const discountPercent = test.discount_percentage || 20;
+      const discountedPrice = calculateDiscountedPrice(test.price, discountPercent);
+      const badges = [`${discountPercent}% off`];
 
       const success = await cartService.toggleBooking(test, originalPrice, discountedPrice, badges);
 
@@ -196,7 +197,8 @@ const AllTests = () => {
           onEndReachedThreshold={0.5}
           renderItem={({ item }) => {
             const isBooked = bookedTests.includes(item.id);
-            const discountedPrice = item.price * 0.8; // 20% discount
+            const discountPercent = item.discount_percentage || 20; // Use API discount or default to 20%
+            const discountedPrice = item.price * (1 - discountPercent / 100);
 
             return (
               <View style={styles.row}>

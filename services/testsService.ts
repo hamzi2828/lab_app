@@ -19,6 +19,7 @@ export interface AllTest {
   category: string;
   report_title: string;
   price: number;
+  discount_percentage?: number;
   has_sub_tests: boolean;
   status: string;
   image_url: string;
@@ -68,7 +69,9 @@ export const fetchAllTests = async (params: FetchAllTestsParams = {}): Promise<A
       type: type // Filter tests by type: "all", "pathology", or "general"
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/all-tests?${queryParams}`, {
+    const url = `${API_BASE_URL}/api/all-tests?${queryParams}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -77,6 +80,9 @@ export const fetchAllTests = async (params: FetchAllTestsParams = {}): Promise<A
     });
 
     const responseText = await response.text();
+
+    console.log('========== ALL TESTS API ==========');
+    console.log('📄 Raw Response:', responseText);
 
     if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
       if (responseText.includes('The action you have requested is not allowed')) {
@@ -89,6 +95,7 @@ export const fetchAllTests = async (params: FetchAllTestsParams = {}): Promise<A
     try {
       result = JSON.parse(responseText);
     } catch (parseError) {
+      console.error('❌ Failed to parse JSON:', parseError);
       throw new Error('Invalid response from server');
     }
 
@@ -100,9 +107,12 @@ export const fetchAllTests = async (params: FetchAllTestsParams = {}): Promise<A
       throw new Error(result.message || 'Failed to fetch tests');
     }
 
+    console.log('====================================');
+
     return result;
 
   } catch (error) {
+    console.error('❌ fetchAllTests error:', error);
     throw error;
   }
 };

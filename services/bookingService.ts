@@ -623,7 +623,7 @@ class BookingService {
         return {
           success: true,
           message: result.message || 'Booking submitted successfully!',
-          bookingId: result.booking_id || result.data?.booking_id,
+          bookingId: result.data?.booking_reference || result.booking_reference || `BK${String(result.data?.booking_id || result.booking_id || '').padStart(6, '0')}`,
         };
       } else {
         return {

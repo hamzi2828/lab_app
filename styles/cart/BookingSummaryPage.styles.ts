@@ -390,12 +390,11 @@ export const styles = StyleSheet.create({
     marginTop: 10,
   },
   submitButton: {
-    backgroundColor: BRAND_GREEN,
     borderRadius: 25,
     paddingVertical: 18,
     alignItems: 'center',
     elevation: 8,
-    shadowColor: BRAND_GREEN,
+    shadowColor: '#3c5e45',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

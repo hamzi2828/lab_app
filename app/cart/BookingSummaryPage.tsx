@@ -11,10 +11,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { LinearGradient } from 'expo-linear-gradient';
 import { BRAND_GREEN } from "../../constants/Colors";
 import { styles } from "../../styles/cart/BookingSummaryPage.styles";
 import bookingService, { Address, DateItem } from "../../services/bookingService";
 import LoginRequiredModal from "../../components/LoginRequiredModal";
+import BookingSuccessModal from "../../components/BookingSuccessModal";
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +33,8 @@ const BookingSummaryPage = () => {
   const [bookedTests, setBookedTests] = useState<any[]>([]);
   const [days, setDays] = useState<DateItem[]>([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successBookingId, setSuccessBookingId] = useState<string>('');
 
   useEffect(() => {
     loadBookingData();
@@ -71,16 +75,8 @@ const BookingSummaryPage = () => {
       // On success
       (bookingId) => {
         setSubmitting(false);
-        Alert.alert(
-          'Booking Successful!',
-          `Your booking has been submitted successfully. Booking ID: ${bookingId}`,
-          [
-            {
-              text: 'OK',
-              onPress: () => router.push('/home/HomePageScreen'),
-            }
-          ]
-        );
+        setSuccessBookingId(bookingId || '');
+        setShowSuccessModal(true);
       },
       // On login required
       () => {
@@ -251,25 +247,28 @@ const BookingSummaryPage = () => {
         {/* Submit Button */}
         <View style={styles.submitContainer}>
           <TouchableOpacity
-            style={[
-              styles.submitButton,
-              styles.submitButtonEnabled
-            ]}
             onPress={handleSubmit}
             disabled={submitting}
             activeOpacity={0.8}
           >
-            {submitting ? (
-              <View style={styles.submitButtonContent}>
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={styles.submitButtonText}>Processing...</Text>
-              </View>
-            ) : (
-              <View style={styles.submitButtonContent}>
-                <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                <Text style={styles.submitButtonText}>Confirm Booking</Text>
-              </View>
-            )}
+            <LinearGradient
+              colors={['#3c5e45', '#0d9b1e']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.submitButton}
+            >
+              {submitting ? (
+                <View style={styles.submitButtonContent}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.submitButtonText}>Processing...</Text>
+                </View>
+              ) : (
+                <View style={styles.submitButtonContent}>
+                  <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                  <Text style={styles.submitButtonText}>Confirm Booking</Text>
+                </View>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -286,6 +285,14 @@ const BookingSummaryPage = () => {
           "Track your booking history",
           "Faster future bookings"
         ]}
+      />
+
+      {/* Booking Success Modal */}
+      <BookingSuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        bookingId={successBookingId}
+        onOkPress={() => router.push('/home/HomePageScreen')}
       />
     </View>
   );

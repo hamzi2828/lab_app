@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BRAND_GREEN } from '../constants/Colors';
 
@@ -32,7 +33,7 @@ const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
     const loginPath = redirectPath
       ? `/auth/LoginScreen?redirect=${encodeURIComponent(redirectPath)}`
       : '/auth/LoginScreen';
-    router.push(loginPath);
+    router.push(loginPath as any);
   };
 
   return (
@@ -46,9 +47,14 @@ const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
         <View style={styles.loginModalContainer}>
           {/* Header */}
           <View style={styles.loginModalHeader}>
-            <View style={styles.loginIconContainer}>
-              <Ionicons name="lock-closed" size={32} color={BRAND_GREEN} />
-            </View>
+            <LinearGradient
+              colors={['#3c5e45', '#0d9b1e']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.loginIconContainer}
+            >
+              <Ionicons name="lock-closed" size={32} color="#fff" />
+            </LinearGradient>
             <Text style={styles.loginModalTitle}>{title}</Text>
             <Text style={styles.loginModalSubtitle}>{subtitle}</Text>
           </View>
@@ -74,12 +80,18 @@ const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.loginConfirmButton}
               onPress={handleSignIn}
               activeOpacity={0.8}
+              style={{ flex: 1 }}
             >
-              <Ionicons name="log-in" size={18} color="#fff" />
-              <Text style={styles.loginConfirmButtonText}>Sign In</Text>
+              <LinearGradient
+                colors={['#3c5e45', '#0d9b1e']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.loginConfirmButton}
+              >
+                <Text style={styles.loginConfirmButtonText}>Sign In</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
@@ -120,10 +132,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: `${BRAND_GREEN}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    shadowColor: '#0d9b1e',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   loginModalTitle: {
     fontSize: 24,
@@ -174,15 +193,13 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   loginConfirmButton: {
-    flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: BRAND_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-    shadowColor: BRAND_GREEN,
+    shadowColor: '#3c5e45',
     shadowOffset: {
       width: 0,
       height: 4,
