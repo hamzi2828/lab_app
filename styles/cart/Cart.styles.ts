@@ -7,6 +7,11 @@ export const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginTop: 50,
   },
+  containerShowBooking: {
+    flex: 1,
+    backgroundColor: "#fff",
+    marginTop: -30,
+  },
   flatListContainer: {
     paddingBottom: 150, // Add bottom padding to avoid overlap with footer
   },
@@ -141,5 +146,19 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     marginVertical: 15,
+  },
+  bookingHeader: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: BRAND_GREEN,
+    fontWeight: "600",
   },
 });

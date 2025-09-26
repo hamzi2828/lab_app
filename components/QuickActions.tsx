@@ -1,13 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BRAND_GREEN } from "../constants/Colors";
 import LoginRequiredModal from "./LoginRequiredModal";
-import reportsIcon from "../assets/icons/reports.png";
-import riderIcon from "../assets/icons/rider.png";
-import mybookingsIcon from "../assets/icons/mybooking.png";
-import feedbackIcon from "../assets/icons/feedback.png";
+// Using vector icons instead of PNG files to avoid build issues
 
 
 const actions = [
@@ -15,7 +12,7 @@ const actions = [
     key: "reports",
     labelTop: "View Reports",
     Icon: (color: string, size: number) => (
-      <Image source={reportsIcon} style={{ width: size, height: size }} />
+      <MaterialCommunityIcons name="file-document-outline" size={size} color={color} />
     ),
     onPress: () => {},
   },
@@ -23,15 +20,15 @@ const actions = [
     key: "homeSampling",
     labelTop: "Free Home Sampling",
     Icon: (color: string, size: number) => (
-      <Image source={riderIcon} style={{ width: size, height: size }} />
+      <MaterialCommunityIcons name="truck-delivery-outline" size={size} color={color} />
     ),
     onPress: () => {},
   },
   {
     key: "bookings",
     labelTop: "My Bookings",
-        Icon: (color: string, size: number) => (
-      <Image source={mybookingsIcon} style={{ width: size, height: size }} />
+    Icon: (color: string, size: number) => (
+      <MaterialCommunityIcons name="calendar-check-outline" size={size} color={color} />
     ),
     onPress: () => {},
   },
@@ -39,7 +36,7 @@ const actions = [
     key: "feedback",
     labelTop: "Feedback",
     Icon: (color: string, size: number) => (
-      <Image source={feedbackIcon} style={{ width: size, height: size }} />
+      <MaterialCommunityIcons name="message-text-outline" size={size} color={color} />
     ),
     onPress: () => {},
   },

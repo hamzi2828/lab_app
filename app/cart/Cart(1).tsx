@@ -11,12 +11,14 @@ import { useFocusEffect } from "@react-navigation/native";
 import CartItem from "./CartItem";
 import { useRouter } from "expo-router";
 import { styles } from "../../styles/cart/Cart.styles";
+import BookingScreen from "./BookingScreen";
 import { getCartTestImage } from "../../services/testsService";
 import { cartService, CartTest } from "../../services/cartService";
 
 const Cart = () => {
   const [bookedTests, setBookedTests] = useState<CartTest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBooking, setShowBooking] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -88,6 +90,14 @@ const Cart = () => {
     );
   }
 
+  if (showBooking) {
+    return (
+      <View style={styles.containerShowBooking}>
+        <BookingScreen />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar />
@@ -129,7 +139,7 @@ const Cart = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionSegment, styles.actionRight]}
-            onPress={() => router.push("/cart/BookingScreen" as any)}
+            onPress={() => setShowBooking(true)}
           >
             <Text style={[styles.actionText, styles.actionTextPrimary]}>Next</Text>
           </TouchableOpacity>

@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from "../common/Header";
 import HomeSlider from "../../components/HomeSlider";
@@ -21,6 +21,7 @@ const HomePage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [cartCount, setCartCount] = useState<number>(0);
   const router = useRouter();
+  const navigation = useNavigation();
 
   const handleSeeAll = () => {
     router.push("/home/AllTests");
@@ -85,7 +86,7 @@ const HomePage = () => {
       component: (
         <View style={styles.proceedButtonContainer}>
           <TouchableOpacity
-            onPress={() => router.push('/cart/Cart')}
+            onPress={() => navigation.navigate('Cart' as never)}
             activeOpacity={0.8}
           >
             <LinearGradient

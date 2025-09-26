@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LabApp",
-    "slug": "LabApp",
+    "name": "CITILAB",
+    "slug": "CITILAB",
     "newArchEnabled": true,
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arsamjaved.LabApp"
+      "package": "com.arsamjaved.citilab"
     },
     "web": {
       "bundler": "metro",
@@ -41,6 +41,7 @@
       "eas": {
         "projectId": "9b5c6a34-8a32-4e6a-9b48-ddfe54ec3e95"
       }
-    }
+    },
+    "owner": "arsamjaved"
   }
 }

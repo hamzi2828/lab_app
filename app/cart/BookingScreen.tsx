@@ -274,7 +274,6 @@ const BookingScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
       
       {/* Header */}
       <View style={styles.header}>

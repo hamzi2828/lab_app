@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
 import TestSearchHeader, { TabKey } from "./TestSearchHeader";
 import { styles } from "../../styles/alltest/AllTests.styles";
@@ -11,6 +11,7 @@ import { cartService } from "../../services/cartService";
 
 const AllTests = () => {
   const router = useRouter();
+  const navigation = useNavigation();
   const [city, setCity] = useState("Islamabad");
   const [activeTab, setActiveTab] = useState<TabKey>("all-tests");
   const [search, setSearch] = useState("");
@@ -238,7 +239,7 @@ const AllTests = () => {
       {cartCount > 0 && (
         <View style={styles.proceedButtonContainer}>
           <TouchableOpacity
-            onPress={() => router.push('/cart/Cart')}
+            onPress={() => navigation.navigate('Cart' as never)}
             activeOpacity={0.8}
           >
             <LinearGradient
