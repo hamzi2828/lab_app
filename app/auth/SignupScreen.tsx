@@ -23,6 +23,7 @@ import {
   submitSignupForm,
   ValidationErrors
 } from "../../services/signupValidation";
+import { submitLoginForm } from "../../services/loginValidation";
 
 const SignupScreen = () => {
   const router = useRouter();
@@ -43,6 +44,8 @@ const SignupScreen = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeSection, setActiveSection] = useState<'personal' | 'contact'>('personal');
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
 
   // Handle tab press from AppNavigator when on signup screen
   const handleTabPress = (routeName: string) => {
@@ -88,6 +91,8 @@ const SignupScreen = () => {
   };
 
   const handleSubmit = async () => {
+    if (isLoading) return;
+
     const contactData = {
       email,
       phoneNumber,
@@ -116,10 +121,25 @@ const SignupScreen = () => {
       acceptedTerms
     };
 
-    try {
-      await submitSignupForm(formData);
+    setIsLoading(true);
 
-      // Clear all input fields on successful registration
+    try {
+      // Step 1: Register the user
+      const registrationResult = await submitSignupForm(formData);
+      console.log('Registration successful:', registrationResult);
+
+      // Step 2: Automatically log in the user using the login API
+      const loginData = {
+        authMethod: 'email' as const,
+        email: email,
+        password: password
+      };
+
+      console.log('Attempting automatic login after registration...');
+      const loginResult = await submitLoginForm(loginData);
+      console.log('Auto-login successful:', loginResult);
+
+      // Clear all input fields on successful registration and login
       setTitle("");
       setFirstname("");
       setLastname("");
@@ -133,11 +153,20 @@ const SignupScreen = () => {
       setErrors({});
       setActiveSection('personal'); // Reset to first section
 
-      Alert.alert('Success', 'Account created successfully!');
-      // Navigate to login or home screen
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create account. Please try again.');
+      // Show disclaimer modal after successful registration and login
+      setShowDisclaimerModal(true);
+    } catch (error: any) {
+      console.error('Registration or login error:', error);
+      Alert.alert('Error', error.message || 'Failed to create account. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleDisclaimerAccept = () => {
+    setShowDisclaimerModal(false);
+    // Navigate to home page after accepting disclaimer
+    router.replace("/");
   };
 
   return (
@@ -473,14 +502,17 @@ const SignupScreen = () => {
       </View>
           <TouchableOpacity
             onPress={handleSubmit}
-            activeOpacity={0.8}>
+            activeOpacity={0.8}
+            disabled={isLoading}>
             <LinearGradient
               colors={['#3c5e45', '#0d9b1e']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.continueButton}
             >
-              <Text style={styles.continueButtonText}>Submit</Text>
+              <Text style={styles.continueButtonText}>
+                {isLoading ? 'Submitting...' : 'Submit'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -499,6 +531,70 @@ const SignupScreen = () => {
       <View style={styles.tabBarContainer}>
         <AppNavigator isLoginScreen={true} onTabPress={handleTabPress} />
       </View>
+
+      {/* Disclaimer Modal */}
+      <Modal
+        visible={showDisclaimerModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleDisclaimerAccept}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.disclaimerModalContainer}>
+            <ScrollView style={styles.disclaimerModalContent} showsVerticalScrollIndicator={true}>
+              <Text style={styles.disclaimerModalTitle}>CITILAB Service Disclaimer</Text>
+
+              <Text style={styles.disclaimerText}>
+                This disclaimer details our obligations to you regarding CITILAB Service (ORS). Using the Website implies that you accept the terms of this disclaimer. You are permitted to use our ORS for your own purposes and to print and download material from this Website provided that you do not modify any content without our consent. Material on this website must not be republished online or offline without our permission. The copyright and other intellectual property rights in all material on this Website is owned by IDC or our licensors and must not be reproduced without our prior consent.
+              </Text>
+
+              <Text style={styles.disclaimerSectionTitle}>VISITOR CONDUCT</Text>
+              <Text style={styles.disclaimerText}>
+                When using this website you shall not post or send to or from this Website any material for which you have not obtained all necessary consents, is discriminatory, obscene, pornographic, defamatory, liable to incite racial hatred, in breach of confidentiality or privacy, which may cause annoyance or inconvenience to others, which encourages or constitutes conduct that would be deemed a criminal offence, give rise to a civil liability, or otherwise is contrary to the law in Pakistan;
+              </Text>
+
+              <Text style={styles.disclaimerSectionTitle}>LINKS TO AND FROM OTHER WEBSITES</Text>
+              <Text style={styles.disclaimerText}>
+                Any links to third party websites located on this Website are provided for your convenience only. We have not reviewed each third party website and have no responsibility for such third party websites or their content. If you would like to link to this Website, you may only do so on the basis that you link to, but do not replicate, any page on this Website and you do not in any way imply that we are endorsing any services or products unless this has been specifically agreed with us.
+              </Text>
+
+              <Text style={styles.disclaimerSectionTitle}>EXCLUSION OF LIABILITY</Text>
+              <Text style={styles.disclaimerText}>
+                We take all reasonable steps to ensure that the information on this Website is correct. However, we do not guarantee the correctness or completeness of material on this Website. Neither we nor any other party (whether or not involved in producing, maintaining or delivering this Website), shall be liability or responsible for any kind of loss or damage that may result to you or a third party as a result of your or their use of our website. This exclusion shall include servicing or repair costs and, without limitation, any other direct, indirect or consequential loss.
+              </Text>
+
+              <Text style={styles.disclaimerSectionTitle}>LAW AND JURISDICTION</Text>
+              <Text style={styles.disclaimerText}>
+                The report delivered through the ORS is not valid for Court.
+              </Text>
+
+              <View style={styles.disclaimerContactContainer}>
+                <Text style={styles.disclaimerContactText}>Kashmir Gate Plaza,</Text>
+                <Text style={styles.disclaimerContactText}>Opp: Benazir Bhutto Hospital,</Text>
+                <Text style={styles.disclaimerContactText}>Murree Road, Rawalpindi.</Text>
+                <Text style={styles.disclaimerContactText}>☎ UAN: 111-511-512, 051-4847390-92</Text>
+                <Text style={styles.disclaimerContactText}>For Inquiries: +92 334 0457457</Text>
+                <Text style={styles.disclaimerContactText}>https://citilab.com.pk/</Text>
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={handleDisclaimerAccept}
+              activeOpacity={0.8}
+              style={styles.disclaimerAcceptButton}
+            >
+              <LinearGradient
+                colors={['#3c5e45', '#0d9b1e']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.disclaimerButtonGradient}
+              >
+                <Text style={styles.disclaimerAcceptButtonText}>I Accept</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

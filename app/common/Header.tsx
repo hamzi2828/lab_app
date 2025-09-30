@@ -110,7 +110,7 @@ const Header = () => {
         {isLoggedIn ? (
           <TouchableOpacity
             style={[styles.icon, styles.userButton]}
-            onPress={handleLogout}
+            onPress={() => navigation.navigate('profile/Profile' as never)}
           >
             <View style={styles.userInfo}>
               <Text style={styles.userName} numberOfLines={1}>

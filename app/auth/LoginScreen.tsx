@@ -9,6 +9,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
@@ -33,6 +34,8 @@ const LoginScreen = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<LoginValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const router = useRouter();
   const params = useLocalSearchParams();
   const redirectTo = params.redirect as string;
@@ -102,23 +105,12 @@ const LoginScreen = () => {
       // Clear form on successful login
       clearForm();
 
-      Alert.alert(
-        'Login Successful',
-        `Welcome back, ${result.data?.name || 'User'}!`,
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              // If redirectTo is provided and valid, navigate there, otherwise go to main app
-              if (redirectTo && isValidRedirect(redirectTo)) {
-                router.replace(redirectTo as any);
-              } else {
-                router.replace("/");
-              }
-            }
-          }
-        ]
-      );
+      // Determine navigation path
+      const navigationPath = (redirectTo && isValidRedirect(redirectTo)) ? redirectTo : "/";
+      setPendingNavigation(navigationPath);
+
+      // Show disclaimer modal
+      setShowDisclaimerModal(true);
 
     } catch (error: any) {
       Alert.alert(
@@ -190,6 +182,14 @@ const LoginScreen = () => {
             />
           </View>
         );
+    }
+  };
+
+  const handleDisclaimerAccept = () => {
+    setShowDisclaimerModal(false);
+    if (pendingNavigation) {
+      router.replace(pendingNavigation as any);
+      setPendingNavigation(null);
     }
   };
 
@@ -345,6 +345,70 @@ const LoginScreen = () => {
       <View style={styles.tabBarContainer}>
         <AppNavigator isLoginScreen={true} onTabPress={handleTabPress} />
       </View>
+
+      {/* Disclaimer Modal */}
+      <Modal
+        visible={showDisclaimerModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleDisclaimerAccept}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={true}>
+              <Text style={styles.modalTitle}>CITILAB Service Disclaimer</Text>
+
+              <Text style={styles.disclaimerText}>
+                This disclaimer details our obligations to you regarding CITILAB Service (ORS). Using the Website implies that you accept the terms of this disclaimer. You are permitted to use our ORS for your own purposes and to print and download material from this Website provided that you do not modify any content without our consent. Material on this website must not be republished online or offline without our permission. The copyright and other intellectual property rights in all material on this Website is owned by IDC or our licensors and must not be reproduced without our prior consent.
+              </Text>
+
+              <Text style={styles.sectionTitle}>VISITOR CONDUCT</Text>
+              <Text style={styles.disclaimerText}>
+                When using this website you shall not post or send to or from this Website any material for which you have not obtained all necessary consents, is discriminatory, obscene, pornographic, defamatory, liable to incite racial hatred, in breach of confidentiality or privacy, which may cause annoyance or inconvenience to others, which encourages or constitutes conduct that would be deemed a criminal offence, give rise to a civil liability, or otherwise is contrary to the law in Pakistan;
+              </Text>
+
+              <Text style={styles.sectionTitle}>LINKS TO AND FROM OTHER WEBSITES</Text>
+              <Text style={styles.disclaimerText}>
+                Any links to third party websites located on this Website are provided for your convenience only. We have not reviewed each third party website and have no responsibility for such third party websites or their content. If you would like to link to this Website, you may only do so on the basis that you link to, but do not replicate, any page on this Website and you do not in any way imply that we are endorsing any services or products unless this has been specifically agreed with us.
+              </Text>
+
+              <Text style={styles.sectionTitle}>EXCLUSION OF LIABILITY</Text>
+              <Text style={styles.disclaimerText}>
+                We take all reasonable steps to ensure that the information on this Website is correct. However, we do not guarantee the correctness or completeness of material on this Website. Neither we nor any other party (whether or not involved in producing, maintaining or delivering this Website), shall be liability or responsible for any kind of loss or damage that may result to you or a third party as a result of your or their use of our website. This exclusion shall include servicing or repair costs and, without limitation, any other direct, indirect or consequential loss.
+              </Text>
+
+              <Text style={styles.sectionTitle}>LAW AND JURISDICTION</Text>
+              <Text style={styles.disclaimerText}>
+                The report delivered through the ORS is not valid for Court.
+              </Text>
+
+              <View style={styles.contactContainer}>
+                <Text style={styles.contactText}>Kashmir Gate Plaza,</Text>
+                <Text style={styles.contactText}>Opp: Benazir Bhutto Hospital,</Text>
+                <Text style={styles.contactText}>Murree Road, Rawalpindi.</Text>
+                <Text style={styles.contactText}>☎ UAN: 111-511-512, 051-4847390-92</Text>
+                <Text style={styles.contactText}>For Inquiries: +92 334 0457457</Text>
+                <Text style={styles.contactText}>https://citilab.com.pk/</Text>
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={handleDisclaimerAccept}
+              activeOpacity={0.8}
+              style={styles.modalAcceptButton}
+            >
+              <LinearGradient
+                colors={['#3c5e45', '#0d9b1e']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.modalButtonGradient}
+              >
+                <Text style={styles.modalAcceptButtonText}>I Accept</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
